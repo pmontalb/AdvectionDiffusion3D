@@ -23,11 +23,12 @@ template<typename Real>
 template<typename Real>
 static void SetUpInputData(pde::InputData<Real>& inputData)
 {
-	inputData.diffusionCoefficients.fill(Real(0.5));
-	inputData.deltaTime = Real(1e-5);
+	inputData.diffusionCoefficients.fill(Real(0.0));
+	inputData.deltaTime = Real(1e-3);
 
-	std::vector<Real> velocity(totalSize, Real(0.1));
-	inputData.velocityField.fill(velocity);
+	inputData.velocityField[0] = std::vector<Real>(totalSize, Real(1));
+	inputData.velocityField[1] = std::vector<Real>(totalSize, Real(-1));
+	inputData.velocityField[2] = std::vector<Real>(totalSize, Real(0.00));
 
 	for (size_t n = 0; n < inputData.spaceGrids.size(); ++n)
 	{
@@ -78,8 +79,8 @@ void Print(const std::vector<Real>& solution, const std::string& label = "soluti
 	std::cerr << "])" << std::endl;
 }
 
-template<typename Real>
-void ToFile(std::ofstream & ofs, const std::vector<Real>& solution, const std::string& label = "solution")
+template<typename VectorT>
+void ToFile(std::ofstream & ofs, const VectorT& solution, const std::string& label = "solution")
 {
 	ofs << label << "= np.array([";
 	for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
@@ -96,7 +97,7 @@ int main(int /*argc*/, char** /*argv*/)
 	SetUpInputData(inputData);
 
 	std::ofstream ofs("/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/sol.txt", std::ios::out);
-	pde::Problem<float> problem(inputData, config);
+	pde::LinearOperatorProblem<float> problem(inputData, config);
 	for (size_t n = 0; n < 600; ++n)
 	{
 		problem.Advance();

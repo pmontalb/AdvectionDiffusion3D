@@ -129,3 +129,60 @@ TEST_F(AdvectionDiffusionTests, Basic)
 		}
 	}
 }
+
+TEST_F(AdvectionDiffusionTests, ConsistencyWithLinearOperator)
+{
+	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
+	{
+		pde::Configuration config { nSpacePoints, solver };
+		// test single precision
+		{
+			pde::Problem<float> problem(inputDataFloat, config);
+			pde::LinearOperatorProblem<float> linearOperatorProblem(inputDataFloat, config);
+
+			for (size_t n = 0; n < 10; ++n)
+			{
+				problem.Advance();
+				const auto& solution = problem.GetSolution();
+				linearOperatorProblem.Advance();
+				const auto& linearOperatorSolution = linearOperatorProblem.GetSolution();
+
+				for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
+				{
+					for (std::size_t i = 1; i < nSpacePoints[0] - 1; ++i)
+					{
+						for (std::size_t j = 1; j < nSpacePoints[1] - 1; ++j)
+						{
+							EXPECT_NEAR(solution[GetIndex(i, j, k)], linearOperatorSolution[GetIndex(i, j, k)], 5.5e-4) << i << "|" << j << "|" << k << " | --- " << n;
+						}
+					}
+				}
+			}
+		}
+
+		// test double precision
+		{
+			pde::Problem<double> problem(inputDataDouble, config);
+			pde::LinearOperatorProblem<double> linearOperatorProblem(inputDataDouble, config);
+
+			for (size_t n = 0; n < 1; ++n)
+			{
+				problem.Advance();
+				const auto& solution = problem.GetSolution();
+				linearOperatorProblem.Advance();
+				const auto& linearOperatorSolution = linearOperatorProblem.GetSolution();
+
+				for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
+				{
+					for (std::size_t i = 1; i < nSpacePoints[0] - 1; ++i)
+					{
+						for (std::size_t j = 1; j < nSpacePoints[1] - 1; ++j)
+						{
+							EXPECT_NEAR(solution[GetIndex(i, j, k)], linearOperatorSolution[GetIndex(i, j, k)], 5e-10) << i << "|" << j << "|" << k << " | --- " << n;
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -6,6 +6,8 @@ create_library(
 		Pde
 	SOURCES
 		Problem.cpp
+	SYSTEM_DEPENDENCIES
+		Eigen3::Eigen
 )
 
 create_executable(

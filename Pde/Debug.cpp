@@ -10,25 +10,24 @@ static constexpr size_t totalSize = nSpacePoints[0] * nSpacePoints[1] * nSpacePo
 
 [[nodiscard]] static constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k) noexcept
 {
-	constexpr pde::Configuration config { nSpacePoints };
-	return config.GetIndex(i, j, k);
+	return pde::GetIndex(i, j, k, nSpacePoints);
 }
 template<typename Real>
 [[nodiscard]] static constexpr Real InitialCondition(const Real x, const Real y, const Real z) noexcept
 {
-	return std::exp(-Real(2.0) * (x * x + y * y + z * z));
+	return Real(1.0)+0*x +0*y + 0*z;//std::exp(-Real(2.0) * (x * x + y * y + z * z));
 	//		return std::sin(x + y + 0 * z);
 }
 
 template<typename Real>
 static void SetUpInputData(pde::InputData<Real>& inputData)
 {
-	inputData.diffusionCoefficients.fill(Real(0.0));
-	inputData.deltaTime = Real(1e-3);
+	inputData.diffusionCoefficients.fill(Real(0.));
+	inputData.deltaTime = Real(1e-2);
 
 	inputData.velocityField[0] = std::vector<Real>(totalSize, Real(1));
-	inputData.velocityField[1] = std::vector<Real>(totalSize, Real(-1));
-	inputData.velocityField[2] = std::vector<Real>(totalSize, Real(0.00));
+	inputData.velocityField[1] = std::vector<Real>(totalSize, Real(1));
+	inputData.velocityField[2] = std::vector<Real>(totalSize, Real(1));
 
 	for (size_t n = 0; n < inputData.spaceGrids.size(); ++n)
 	{
@@ -92,15 +91,15 @@ void ToFile(std::ofstream & ofs, const VectorT& solution, const std::string& lab
 
 int main(int /*argc*/, char** /*argv*/)
 {
-	pde::Configuration config { nSpacePoints, pde::SolverType::ExplicitEuler };
-	pde::InputData<float> inputData;
+	using Real = double;
+	pde::InputData<Real> inputData;
 	SetUpInputData(inputData);
 
 	std::ofstream ofs("/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/sol.txt", std::ios::out);
-	pde::LinearOperatorProblem<float> problem(inputData, config);
+	pde::LinearOperatorProblem<Real> problem(inputData);
 	for (size_t n = 0; n < 600; ++n)
 	{
-		problem.Advance();
+		problem.Advance(pde::SolverType::ImplicitEuler);
 		const auto& solution = problem.GetSolution();
 		ToFile(ofs, solution);
 	}

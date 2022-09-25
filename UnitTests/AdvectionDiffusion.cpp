@@ -11,8 +11,7 @@ class AdvectionDiffusionTests: public testing::Test
 public:
 	[[nodiscard]] constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k) const noexcept
 	{
-		constexpr pde::Configuration config { nSpacePoints };
-		return config.GetIndex(i, j, k);
+		return pde::GetIndex(i, j, k, nSpacePoints);
 	}
 
 	template<typename Real>
@@ -86,44 +85,43 @@ TEST_F(AdvectionDiffusionTests, Basic)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
-			pde::Problem<float> problem(inputDataFloat, config);
+			pde::Problem<float> problem(inputDataFloat);
 
-			auto previousMax = std::numeric_limits<float>::quiet_NaN();
+			auto previousMax = std::optional<float>{};
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 
 				// check there's no instability
 				auto currentMax = *std::max_element(solution.begin(), solution.end());
-				if (!std::isfinite(previousMax))
+				if (!previousMax)
 					previousMax = currentMax;
 				else
 				{
-					ASSERT_LT(currentMax, previousMax * 1.0002f);
+					ASSERT_LT(currentMax, previousMax.value() * 1.0002f);
 				}
 			}
 		}
 
 		// test double precision
 		{
-			pde::Problem<double> problem(inputDataDouble, config);
-			auto previousMax = std::numeric_limits<double>::quiet_NaN();
+			pde::Problem<double> problem(inputDataDouble);
+			auto previousMax = std::optional<double>{};
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 
 				// check there's no instability
 				auto currentMax = *std::max_element(solution.begin(), solution.end());
-				if (!std::isfinite(previousMax))
+				if (!previousMax)
 					previousMax = currentMax;
 				else
 				{
-					ASSERT_LT(currentMax, previousMax * 1.0002);
+					ASSERT_LT(currentMax, previousMax.value() * 1.0002);
 				}
 			}
 		}
@@ -134,17 +132,16 @@ TEST_F(AdvectionDiffusionTests, ConsistencyWithLinearOperator)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
-			pde::Problem<float> problem(inputDataFloat, config);
-			pde::LinearOperatorProblem<float> linearOperatorProblem(inputDataFloat, config);
+			pde::Problem<float> problem(inputDataFloat);
+			pde::LinearOperatorProblem<float> linearOperatorProblem(inputDataFloat);
 
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
-				linearOperatorProblem.Advance();
+				linearOperatorProblem.Advance(solver);
 				const auto& linearOperatorSolution = linearOperatorProblem.GetSolution();
 
 				for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
@@ -162,14 +159,14 @@ TEST_F(AdvectionDiffusionTests, ConsistencyWithLinearOperator)
 
 		// test double precision
 		{
-			pde::Problem<double> problem(inputDataDouble, config);
-			pde::LinearOperatorProblem<double> linearOperatorProblem(inputDataDouble, config);
+			pde::Problem<double> problem(inputDataDouble);
+			pde::LinearOperatorProblem<double> linearOperatorProblem(inputDataDouble);
 
 			for (size_t n = 0; n < 1; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
-				linearOperatorProblem.Advance();
+				linearOperatorProblem.Advance(solver);
 				const auto& linearOperatorSolution = linearOperatorProblem.GetSolution();
 
 				for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
@@ -183,6 +180,26 @@ TEST_F(AdvectionDiffusionTests, ConsistencyWithLinearOperator)
 					}
 				}
 			}
+		}
+	}
+}
+
+TEST_F(AdvectionDiffusionTests, LinearOperatorAdvanceNoChecks)
+{
+	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson })
+	{
+		// test single precision
+		{
+			pde::LinearOperatorProblem<float> linearOperatorProblem(inputDataFloat);
+			for (size_t n = 0; n < 10; ++n)
+				linearOperatorProblem.Advance(solver);
+		}
+
+		// test double precision
+		{
+			pde::LinearOperatorProblem<double> linearOperatorProblem(inputDataDouble);
+			for (size_t n = 0; n < 10; ++n)
+				linearOperatorProblem.Advance(solver);
 		}
 	}
 }

@@ -34,6 +34,6 @@ if __name__ == "__main__":
     ax = fig.add_subplot(111, projection='3d')
 
     plot = [ax.plot_surface(X, Y, solution[:,:,2,0], cmap="coolwarm", color='0.75', rstride=1, cstride=1)]
-    ax.set_zlim(0, 0.21)
+    # ax.set_zlim(0, 0.21)
     ani = animation.FuncAnimation(fig, update_plot, counter, fargs=(solution, plot), interval=1000/200)
     plt.show()

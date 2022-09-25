@@ -7,5 +7,8 @@ project(pde)
 include(${CMAKE_SOURCE_DIR}/cmake/All.cmake)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+#find_package(MKL REQUIRED)
+#add_compile_definitions(EIGEN_USE_MKL_ALL)
+
 add_subdirectory(Pde)
 add_subdirectory(UnitTests)

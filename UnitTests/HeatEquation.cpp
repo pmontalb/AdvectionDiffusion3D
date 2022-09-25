@@ -11,8 +11,7 @@ class HeatEquationTests: public testing::Test
 public:
 	[[nodiscard]] constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k) const noexcept
 	{
-		constexpr pde::Configuration config { nSpacePoints };
-		return config.GetIndex(i, j, k);
+		return pde::GetIndex(i, j, k, nSpacePoints);
 	}
 
 	template<typename Real>
@@ -86,13 +85,12 @@ TEST_F(HeatEquationTests, ZeroDiffusionCoefficients)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
-			pde::Problem<float> problem(inputDataFloat, config);
+			pde::Problem<float> problem(inputDataFloat);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -103,10 +101,10 @@ TEST_F(HeatEquationTests, ZeroDiffusionCoefficients)
 
 		// test double precision
 		{
-			pde::Problem<double> problem(inputDataDouble, config);
+			pde::Problem<double> problem(inputDataDouble);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -121,15 +119,14 @@ TEST_F(HeatEquationTests, ConstantSolution)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
 			inputDataFloat.diffusionCoefficients.fill(1.0f);
 			std::fill(inputDataFloat.initialCondition.begin(), inputDataFloat.initialCondition.end(), 1.0);
-			pde::Problem<float> problem(inputDataFloat, config);
+			pde::Problem<float> problem(inputDataFloat);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -142,10 +139,10 @@ TEST_F(HeatEquationTests, ConstantSolution)
 		{
 			inputDataDouble.diffusionCoefficients.fill(1.0);
 			std::fill(inputDataDouble.initialCondition.begin(), inputDataDouble.initialCondition.end(), 1.0);
-			pde::Problem<double> problem(inputDataDouble, config);
+			pde::Problem<double> problem(inputDataDouble);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -160,7 +157,6 @@ TEST_F(HeatEquationTests, LinearSolution)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
 			inputDataFloat.diffusionCoefficients.fill(1.0f);
@@ -177,10 +173,10 @@ TEST_F(HeatEquationTests, LinearSolution)
 						const auto z = inputDataFloat.spaceGrids[2].front() + 2.0f * inputDataFloat.spaceGrids[2].back() * dz;
 						inputDataFloat.initialCondition[GetIndex(i, j, k)] = x + y + z;
 					}
-			pde::Problem<float> problem(inputDataFloat, config);
+			pde::Problem<float> problem(inputDataFloat);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
 					for (std::size_t i = 1; i < nSpacePoints[0] - 1; ++i)
@@ -205,10 +201,10 @@ TEST_F(HeatEquationTests, LinearSolution)
 						const auto z = inputDataDouble.spaceGrids[2].front() + (inputDataDouble.spaceGrids[2].back() - inputDataDouble.spaceGrids[2].front()) * dz;
 						inputDataDouble.initialCondition[GetIndex(i, j, k)] = x + y + z;
 					}
-			pde::Problem<double> problem(inputDataDouble, config);
+			pde::Problem<double> problem(inputDataDouble);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
 					for (std::size_t i = 1; i < nSpacePoints[0] - 1; ++i)

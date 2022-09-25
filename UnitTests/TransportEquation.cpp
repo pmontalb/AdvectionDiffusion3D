@@ -11,8 +11,7 @@ class TransportEquationTests: public testing::Test
 public:
 	[[nodiscard]] constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k) const noexcept
 	{
-		constexpr pde::Configuration config { nSpacePoints };
-		return config.GetIndex(i, j, k);
+		return pde::GetIndex(i, j, k, nSpacePoints);
 	}
 
 	template<typename Real>
@@ -47,8 +46,7 @@ public:
 		for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 			for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
 				for (std::size_t j = 0; j < nSpacePoints[1]; ++j)
-					inputData.initialCondition[GetIndex(i, j, k)] =
-						InitialCondition(inputData.spaceGrids[0][i], inputData.spaceGrids[1][j], inputData.spaceGrids[2][k]);
+					inputData.initialCondition[GetIndex(i, j, k)] = InitialCondition(inputData.spaceGrids[0][i], inputData.spaceGrids[1][j], inputData.spaceGrids[2][k]);
 
 		for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 		{
@@ -87,13 +85,12 @@ TEST_F(TransportEquationTests, ZeroTransportCoefficients)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
-			pde::Problem<float> problem(inputDataFloat, config);
+			pde::Problem<float> problem(inputDataFloat);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -104,10 +101,10 @@ TEST_F(TransportEquationTests, ZeroTransportCoefficients)
 
 		// test double precision
 		{
-			pde::Problem<double> problem(inputDataDouble, config);
+			pde::Problem<double> problem(inputDataDouble);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -122,16 +119,15 @@ TEST_F(TransportEquationTests, ConstantSolution)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
 			std::vector<float> nonZeroVelocity(totalSize, 1.0f);
 			inputDataFloat.velocityField.fill(nonZeroVelocity);
 			std::fill(inputDataFloat.initialCondition.begin(), inputDataFloat.initialCondition.end(), 1.0);
-			pde::Problem<float> problem(inputDataFloat, config);
+			pde::Problem<float> problem(inputDataFloat);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -145,10 +141,10 @@ TEST_F(TransportEquationTests, ConstantSolution)
 			std::vector<double> nonZeroVelocity(totalSize, 1.0);
 			inputDataDouble.velocityField.fill(nonZeroVelocity);
 			std::fill(inputDataDouble.initialCondition.begin(), inputDataDouble.initialCondition.end(), 1.0);
-			pde::Problem<double> problem(inputDataDouble, config);
+			pde::Problem<double> problem(inputDataDouble);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -163,7 +159,6 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 {
 	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
 			for (size_t axisIdx = 0; axisIdx < 3; ++axisIdx)
@@ -174,10 +169,10 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 				inputDataFloat.velocityField.fill(std::vector<float>(totalSize, 0.0));
 				inputDataFloat.velocityField[axisIdx] = std::vector<float>(totalSize, velocity);
 
-				pde::Problem<float> problem(inputDataFloat, config);
+				pde::Problem<float> problem(inputDataFloat);
 				for (size_t n = 0; n < 20; ++n)
 				{
-					problem.Advance();
+					problem.Advance(solver);
 					const auto& solution = problem.GetSolution();
 					for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
 					{
@@ -189,24 +184,21 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 
 								if (axisIdx == 0)
 								{
-									const auto characteristicX =
-										inputDataFloat.spaceGrids[0][i] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+									const auto characteristicX = inputDataFloat.spaceGrids[0][i] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataFloat.spaceGrids[1][j], inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									EXPECT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 1)
 								{
-									const auto characteristicY =
-										inputDataFloat.spaceGrids[1][j] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+									const auto characteristicY = inputDataFloat.spaceGrids[1][j] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], characteristicY, inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 2)
 								{
-									const auto characteristicZ =
-										inputDataFloat.spaceGrids[2][k] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+									const auto characteristicZ = inputDataFloat.spaceGrids[2][k] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], inputDataFloat.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
@@ -217,7 +209,7 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 				}
 			}
 		}
-		
+
 		// test double precision
 		{
 			for (size_t axisIdx = 0; axisIdx < 3; ++axisIdx)
@@ -227,11 +219,11 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 				const auto velocity = 0.1;
 				inputDataDouble.velocityField.fill(std::vector<double>(totalSize, 0.0));
 				inputDataDouble.velocityField[axisIdx] = std::vector<double>(totalSize, velocity);
-				
-				pde::Problem<double> problem(inputDataDouble, config);
+
+				pde::Problem<double> problem(inputDataDouble);
 				for (size_t n = 0; n < 20; ++n)
 				{
-					problem.Advance();
+					problem.Advance(solver);
 					const auto& solution = problem.GetSolution();
 					for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
 					{
@@ -243,24 +235,21 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 
 								if (axisIdx == 0)
 								{
-									const auto characteristicX =
-										inputDataDouble.spaceGrids[0][i] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+									const auto characteristicX = inputDataDouble.spaceGrids[0][i] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataDouble.spaceGrids[1][j], inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									EXPECT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 1)
 								{
-									const auto characteristicY =
-										inputDataDouble.spaceGrids[1][j] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+									const auto characteristicY = inputDataDouble.spaceGrids[1][j] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], characteristicY, inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 2)
 								{
-									const auto characteristicZ =
-										inputDataDouble.spaceGrids[2][k] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+									const auto characteristicZ = inputDataDouble.spaceGrids[2][k] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], inputDataDouble.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
@@ -275,19 +264,19 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 }
 
 class TransportEquationTestsWithLinearOpeator: public TransportEquationTests
-{};
+{
+};
 
 TEST_F(TransportEquationTestsWithLinearOpeator, ZeroTransportCoefficients)
 {
-	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
+	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson  })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
-			pde::LinearOperatorProblem<float> problem(inputDataFloat, config);
+			pde::LinearOperatorProblem<float> problem(inputDataFloat);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -298,10 +287,10 @@ TEST_F(TransportEquationTestsWithLinearOpeator, ZeroTransportCoefficients)
 
 		// test double precision
 		{
-			pde::LinearOperatorProblem<double> problem(inputDataDouble, config);
+			pde::LinearOperatorProblem<double> problem(inputDataDouble);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
@@ -314,23 +303,41 @@ TEST_F(TransportEquationTestsWithLinearOpeator, ZeroTransportCoefficients)
 
 TEST_F(TransportEquationTestsWithLinearOpeator, ConstantSolution)
 {
-	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff })
+	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
 			std::vector<float> nonZeroVelocity(totalSize, 1.0f);
 			inputDataFloat.velocityField.fill(nonZeroVelocity);
 			std::fill(inputDataFloat.initialCondition.begin(), inputDataFloat.initialCondition.end(), 1.0);
-			pde::LinearOperatorProblem<float> problem(inputDataFloat, config);
+			pde::LinearOperatorProblem<float> problem(inputDataFloat);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
 						for (std::size_t j = 0; j < nSpacePoints[1]; ++j)
-							EXPECT_NEAR(solution[GetIndex(i, j, k)], inputDataFloat.initialCondition[GetIndex(i, j, k)], 5.4e-5) << static_cast<int>(solver);
+						{
+							float tol = 0.0;
+							switch (solver)
+							{
+								case pde::SolverType::ExplicitEuler:
+								case pde::SolverType::LaxWendroff:
+									tol = 5.4e-5f;
+									break;
+								case pde::SolverType::ImplicitEuler:
+									tol = 1.5e-3f;
+									break;
+								case pde::SolverType::CrankNicolson:
+									// numerical instabilities for this is too big! Use doubles!
+									continue;
+								default:
+									ASSERT_FALSE(true);
+									break;
+							}
+							EXPECT_NEAR(solution[GetIndex(i, j, k)], inputDataFloat.initialCondition[GetIndex(i, j, k)], tol) << static_cast<int>(solver);
+						}
 			}
 		}
 
@@ -339,15 +346,34 @@ TEST_F(TransportEquationTestsWithLinearOpeator, ConstantSolution)
 			std::vector<double> nonZeroVelocity(totalSize, 1.0);
 			inputDataDouble.velocityField.fill(nonZeroVelocity);
 			std::fill(inputDataDouble.initialCondition.begin(), inputDataDouble.initialCondition.end(), 1.0);
-			pde::LinearOperatorProblem<double> problem(inputDataDouble, config);
+			pde::LinearOperatorProblem<double> problem(inputDataDouble);
 			for (size_t n = 0; n < 10; ++n)
 			{
-				problem.Advance();
+				problem.Advance(solver);
 				const auto& solution = problem.GetSolution();
 				for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 					for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
 						for (std::size_t j = 0; j < nSpacePoints[1]; ++j)
-							ASSERT_NEAR(solution[GetIndex(i, j, k)], inputDataDouble.initialCondition[GetIndex(i, j, k)], 5e-14) << static_cast<int>(solver);
+						{
+							double tol = 0.0;
+							switch (solver)
+							{
+								case pde::SolverType::ExplicitEuler:
+								case pde::SolverType::LaxWendroff:
+									tol = 9.4e-14;
+									break;
+								case pde::SolverType::ImplicitEuler:
+									tol = 5e-12;
+									break;
+								case pde::SolverType::CrankNicolson:
+									tol = 2e-10;
+									break;
+								default:
+									ASSERT_FALSE(true);
+									break;
+							}
+							EXPECT_NEAR(solution[GetIndex(i, j, k)], inputDataDouble.initialCondition[GetIndex(i, j, k)], tol) << static_cast<int>(solver);
+						}
 			}
 		}
 	}
@@ -355,9 +381,8 @@ TEST_F(TransportEquationTestsWithLinearOpeator, ConstantSolution)
 
 TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 {
-	for (auto solver : { pde::SolverType::ExplicitEuler, /*pde::SolverType::LaxWendroff*/ })
+	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson })
 	{
-		pde::Configuration config { nSpacePoints, solver };
 		// test single precision
 		{
 			for (size_t axisIdx = 0; axisIdx < 3; ++axisIdx)
@@ -368,10 +393,10 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 				inputDataFloat.velocityField.fill(std::vector<float>(totalSize, 0.0));
 				inputDataFloat.velocityField[axisIdx] = std::vector<float>(totalSize, velocity);
 
-				pde::LinearOperatorProblem<float> problem(inputDataFloat, config);
+				pde::LinearOperatorProblem<float> problem(inputDataFloat);
 				for (size_t n = 0; n < 20; ++n)
 				{
-					problem.Advance();
+					problem.Advance(solver);
 					const auto& solution = problem.GetSolution();
 					for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
 					{
@@ -383,27 +408,24 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 
 								if (axisIdx == 0)
 								{
-									const auto characteristicX =
-										inputDataFloat.spaceGrids[0][i] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+									const auto characteristicX = inputDataFloat.spaceGrids[0][i] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataFloat.spaceGrids[1][j], inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k << " --- " << static_cast<int>(solver);
+									ASSERT_NEAR(actual, expected, 6.55e-3) << n << " | " << i << " | " << j << " | " << k << " --- " << static_cast<int>(solver);
 								}
 								else if (axisIdx == 1)
 								{
-									const auto characteristicY =
-										inputDataFloat.spaceGrids[1][j] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+									const auto characteristicY = inputDataFloat.spaceGrids[1][j] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], characteristicY, inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.55e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 2)
 								{
-									const auto characteristicZ =
-										inputDataFloat.spaceGrids[2][k] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+									const auto characteristicZ = inputDataFloat.spaceGrids[2][k] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], inputDataFloat.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.55e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 							}
 						}
@@ -422,10 +444,10 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 				inputDataDouble.velocityField.fill(std::vector<double>(totalSize, 0.0));
 				inputDataDouble.velocityField[axisIdx] = std::vector<double>(totalSize, velocity);
 
-				pde::LinearOperatorProblem<double> problem(inputDataDouble, config);
+				pde::LinearOperatorProblem<double> problem(inputDataDouble);
 				for (size_t n = 0; n < 20; ++n)
 				{
-					problem.Advance();
+					problem.Advance(solver);
 					const auto& solution = problem.GetSolution();
 					for (std::size_t k = 1; k < nSpacePoints[2] - 1; ++k)
 					{
@@ -437,27 +459,24 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 
 								if (axisIdx == 0)
 								{
-									const auto characteristicX =
-										inputDataDouble.spaceGrids[0][i] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+									const auto characteristicX = inputDataDouble.spaceGrids[0][i] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataDouble.spaceGrids[1][j], inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									EXPECT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									EXPECT_NEAR(actual, expected, 6.55e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 1)
 								{
-									const auto characteristicY =
-										inputDataDouble.spaceGrids[1][j] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+									const auto characteristicY = inputDataDouble.spaceGrids[1][j] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], characteristicY, inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.55e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 2)
 								{
-									const auto characteristicZ =
-										inputDataDouble.spaceGrids[2][k] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+									const auto characteristicZ = inputDataDouble.spaceGrids[2][k] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], inputDataDouble.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.55e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 							}
 						}

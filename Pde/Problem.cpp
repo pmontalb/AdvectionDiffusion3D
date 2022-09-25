@@ -28,17 +28,19 @@ namespace pde
 	}	 // namespace detail
 
 	template<typename Real>
-	Problem<Real>::Problem(const InputData<Real>& inputData, pde::Configuration configuration) noexcept : _inputData(inputData), _configuration(configuration)
+	Problem<Real>::Problem(const InputData<Real>& inputData) noexcept : _inputData(inputData)
 	{
 		_solution.resize(static_cast<long>(_inputData.initialCondition.size()));
 		for (size_t i = 0; i < static_cast<size_t>(_solution.size()); ++i)
 			_solution[i] = _inputData.initialCondition[i];
 
-		assert(inputData.initialCondition.size() == _configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
+		for (size_t n = 0; n < _inputData.spaceGrids.size(); ++n)
+			_nSpacePoints[n] = _inputData.spaceGrids[n].size();
+		assert(inputData.initialCondition.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
 	}
 
 	template<typename Real>
-	void Problem<Real>::Advance() noexcept
+	void Problem<Real>::Advance(const SolverType solverType) noexcept
 	{
 		const auto dx = _inputData.spaceGrids[0][1] - _inputData.spaceGrids[0][0];
 		const auto dy = _inputData.spaceGrids[1][1] - _inputData.spaceGrids[1][0];
@@ -54,9 +56,9 @@ namespace pde
 		const auto& u = _inputData.velocityField[0];
 		const auto& v = _inputData.velocityField[1];
 		const auto& w = _inputData.velocityField[2];
-		assert(u.size() == _configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
-		assert(v.size() == _configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
-		assert(w.size() == _configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
+		assert(u.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
+		assert(v.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
+		assert(w.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
 
 		const auto dt = _inputData.deltaTime;
 		assert(std::isfinite(dt) && dt > detail::Tolerance<Real>::value);
@@ -68,13 +70,13 @@ namespace pde
 		assert(std::isfinite(Ky) && Ky >= Real(0.0));
 		assert(std::isfinite(Kz) && Kz >= Real(0.0));
 
-		for (std::size_t k = 1; k < _configuration.nSpacePoints[2] - 1; ++k)
+		for (std::size_t k = 1; k < _nSpacePoints[2] - 1; ++k)
 		{
 			assert(std::abs(_inputData.spaceGrids[2][k + 1] - _inputData.spaceGrids[2][k] - dz) < detail::Tolerance<Real>::value);
-			for (std::size_t i = 1; i < _configuration.nSpacePoints[0] - 1; ++i)
+			for (std::size_t i = 1; i < _nSpacePoints[0] - 1; ++i)
 			{
 				assert(std::abs(_inputData.spaceGrids[0][i + 1] - _inputData.spaceGrids[0][i] - dx) < detail::Tolerance<Real>::value);
-				for (std::size_t j = 1; j < _configuration.nSpacePoints[1] - 1; ++j)
+				for (std::size_t j = 1; j < _nSpacePoints[1] - 1; ++j)
 				{
 					assert(std::abs(_inputData.spaceGrids[1][j + 1] - _inputData.spaceGrids[1][j] - dx) < detail::Tolerance<Real>::value);
 
@@ -98,7 +100,7 @@ namespace pde
 
 					const auto diffusion = diffusionX + diffusionY + diffusionZ;
 
-					switch (_configuration.solverType)
+					switch (solverType)
 					{
 						case SolverType::ExplicitEuler:
 							_solution[GetIndex(i, j, k)] += dt * (advection + diffusion);
@@ -141,32 +143,32 @@ namespace pde
 	void Problem<Real>::SetZeroFluxBoundaryConditions()
 	{
 		// *** Boundary Conditions on X ***
-		for (std::size_t k = 0; k < _configuration.nSpacePoints[2]; ++k)
+		for (std::size_t k = 0; k < _nSpacePoints[2]; ++k)
 		{
-			for (std::size_t j = 0; j < _configuration.nSpacePoints[1]; ++j)
+			for (std::size_t j = 0; j < _nSpacePoints[1]; ++j)
 			{
 				_solution[GetIndex(0, j, k)] = _solution[GetIndex(1, j, k)];
-				_solution[GetIndex(_configuration.nSpacePoints[0] - 1, j, k)] = _solution[GetIndex(_configuration.nSpacePoints[0] - 2, j, k)];
+				_solution[GetIndex(_nSpacePoints[0] - 1, j, k)] = _solution[GetIndex(_nSpacePoints[0] - 2, j, k)];
 			}
 		}
 
 		// *** Boundary Conditions on Y ***
-		for (std::size_t k = 0; k < _configuration.nSpacePoints[2]; ++k)
+		for (std::size_t k = 0; k < _nSpacePoints[2]; ++k)
 		{
-			for (std::size_t i = 0; i < _configuration.nSpacePoints[1]; ++i)
+			for (std::size_t i = 0; i < _nSpacePoints[1]; ++i)
 			{
 				_solution[GetIndex(i, 0, k)] = _solution[GetIndex(i, 1, k)];
-				_solution[GetIndex(i, _configuration.nSpacePoints[1] - 1, k)] = _solution[GetIndex(i, _configuration.nSpacePoints[1] - 2, k)];
+				_solution[GetIndex(i, _nSpacePoints[1] - 1, k)] = _solution[GetIndex(i, _nSpacePoints[1] - 2, k)];
 			}
 		}
 
 		// *** Boundary Conditions on Z ***
-		for (std::size_t i = 0; i < _configuration.nSpacePoints[0]; ++i)
+		for (std::size_t i = 0; i < _nSpacePoints[0]; ++i)
 		{
-			for (std::size_t j = 0; j < _configuration.nSpacePoints[1]; ++j)
+			for (std::size_t j = 0; j < _nSpacePoints[1]; ++j)
 			{
 				_solution[GetIndex(i, j, 0)] = _solution[GetIndex(i, j, 1)];
-				_solution[GetIndex(i, j, _configuration.nSpacePoints[2] - 1)] = _solution[GetIndex(i, j, _configuration.nSpacePoints[2] - 2)];
+				_solution[GetIndex(i, j, _nSpacePoints[2] - 1)] = _solution[GetIndex(i, j, _nSpacePoints[2] - 2)];
 			}
 		}
 
@@ -180,7 +182,7 @@ namespace pde
 	}
 
 	template<typename Real>
-	LinearOperatorProblem<Real>::LinearOperatorProblem(const InputData<Real>& inputData, pde::Configuration configuration) noexcept : Problem<Real>(inputData, configuration)
+	void LinearOperatorProblem<Real>::MakeSpaceOperator(const SolverType solverType) noexcept
 	{
 		const auto dx = _inputData.spaceGrids[0][1] - _inputData.spaceGrids[0][0];
 		const auto dy = _inputData.spaceGrids[1][1] - _inputData.spaceGrids[1][0];
@@ -196,12 +198,11 @@ namespace pde
 		const auto& u = _inputData.velocityField[0];
 		const auto& v = _inputData.velocityField[1];
 		const auto& w = _inputData.velocityField[2];
-		assert(u.size() == _configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
-		assert(v.size() == _configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
-		assert(w.size() == _configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
+		assert(u.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
+		assert(v.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
+		assert(w.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
 
-		const auto dt = _inputData.deltaTime;
-		assert(std::isfinite(dt) && dt > detail::Tolerance<Real>::value);
+		assert(std::isfinite(_inputData.deltaTime) && _inputData.deltaTime > detail::Tolerance<Real>::value);
 
 		const auto Kx = _inputData.diffusionCoefficients[0];
 		const auto Ky = _inputData.diffusionCoefficients[1];
@@ -210,7 +211,7 @@ namespace pde
 		assert(std::isfinite(Ky) && Ky >= Real(0.0));
 		assert(std::isfinite(Kz) && Kz >= Real(0.0));
 
-		const auto totalSize = static_cast<long>(_configuration.nSpacePoints[0] * _configuration.nSpacePoints[1] * _configuration.nSpacePoints[2]);
+		const auto totalSize = static_cast<long>(_nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
 
 		// L
 		_spaceOperator.resize(totalSize, totalSize);
@@ -218,11 +219,11 @@ namespace pde
 		// build the triplets
 		std::vector<Eigen::Triplet<Real>> nonZeroElements;
 		nonZeroElements.reserve(7 * static_cast<size_t>(totalSize));
-		for (std::size_t k = 1; k < _configuration.nSpacePoints[2] - 1; ++k)
+		for (std::size_t k = 1; k < _nSpacePoints[2] - 1; ++k)
 		{
-			for (std::size_t i = 1; i < _configuration.nSpacePoints[0] - 1; ++i)
+			for (std::size_t i = 1; i < _nSpacePoints[0] - 1; ++i)
 			{
-				for (std::size_t j = 1; j < _configuration.nSpacePoints[1] - 1; ++j)
+				for (std::size_t j = 1; j < _nSpacePoints[1] - 1; ++j)
 				{
 					const auto index = GetIndex(i, j, k);
 
@@ -236,7 +237,7 @@ namespace pde
 					const auto indexMinusZ = GetIndex(i, j, k - 1);
 
 					Real adjustingFactor = one;
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						const auto velocityGradientX = (u[indexPlusX] - u[indexMinusX]) / (two * dx);
 						const auto velocityGradientY = (v[indexPlusY] - v[indexMinusY]) / (two * dy);
@@ -246,7 +247,7 @@ namespace pde
 					}
 
 					auto diagonal = -two * (Kx / (dx * dx) + Ky / (dy * dy) + Kz / (dz * dz));
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						diagonal *= adjustingFactor;
 
@@ -258,7 +259,7 @@ namespace pde
 
 					auto upDiagonalX = u[indexPlusX] / (two * dx);
 					upDiagonalX += Kx / (dx * dx);
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						upDiagonalX *= adjustingFactor;
 						upDiagonalX += half * _inputData.deltaTime * u[indexPlusX] * (u[indexPlusX] / (dx * dx));
@@ -267,7 +268,7 @@ namespace pde
 
 					auto downDiagonalX = -u[indexMinusX] / (two * dx);
 					downDiagonalX += Kx / (dx * dx);
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						downDiagonalX *= adjustingFactor;
 						downDiagonalX += half * _inputData.deltaTime * u[indexMinusX] * (u[indexMinusX] / (dx * dx));
@@ -276,7 +277,7 @@ namespace pde
 
 					auto upDiagonalY = v[indexPlusY] / (two * dy);
 					upDiagonalY += Ky / (dy * dy);
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						upDiagonalY *= adjustingFactor;
 						upDiagonalY += half * _inputData.deltaTime * v[indexPlusY] * (v[indexPlusY] / (dy * dy));
@@ -285,7 +286,7 @@ namespace pde
 
 					auto downDiagonalY = -v[indexMinusY] / (two * dy);
 					downDiagonalY += Ky / (dy * dy);
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						downDiagonalY *= adjustingFactor;
 						downDiagonalY += half * _inputData.deltaTime * v[indexMinusY] * (v[indexMinusY] / (dy * dy));
@@ -294,7 +295,7 @@ namespace pde
 
 					auto upDiagonalZ = w[indexPlusZ] / (two * dz);
 					upDiagonalZ += Kz / (dz * dz);
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						upDiagonalZ *= adjustingFactor;
 						upDiagonalZ += half * _inputData.deltaTime * w[indexPlusZ] * (w[indexPlusZ] / (dz * dz));
@@ -303,7 +304,7 @@ namespace pde
 
 					auto downDiagonalZ = -w[indexMinusZ] / (two * dz);
 					downDiagonalZ += Kz / (dz * dz);
-					if (_configuration.solverType == SolverType::LaxWendroff)
+					if (solverType == SolverType::LaxWendroff)
 					{
 						downDiagonalZ *= adjustingFactor;
 						downDiagonalZ += half * _inputData.deltaTime * w[indexMinusZ] * (w[indexMinusZ] / (dz * dz));
@@ -315,22 +316,86 @@ namespace pde
 		}
 		_spaceOperator.setFromTriplets(nonZeroElements.begin(), nonZeroElements.end());
 
-		_timeOperator.resize(totalSize, totalSize);
-		_timeOperator.setIdentity();
-
-		// A = I + dt * L
-		_spaceOperator *= _inputData.deltaTime;
-		_timeOperator += _spaceOperator;
-		//		std::cout << _timeOperator << std::endl;
+		// #ifndef NDEBUG
+		////		std::cout << _spaceOperator << std::endl;
+		//		auto tmp = _spaceOperator.toDense();
+		//		const auto rowWiseSum = tmp.rowwise().sum();
+		//		size_t counter = 0;
+		//		for (const auto& sum: rowWiseSum)
+		//		{
+		//			assert(std::abs(sum) < 5 * detail::Tolerance<Real>::value);
+		//			++counter;
+		//		}
+		// #endif
 	}
 
 	template<typename Real>
-	void LinearOperatorProblem<Real>::Advance() noexcept
+	void LinearOperatorProblem<Real>::Advance(const SolverType solverType) noexcept
 	{
-		//		std::cout << "pre: " << std::endl << _solution << std::endl;
-		_cache = _timeOperator * _solution;
-		_solution = _cache;
-		//		std::cout << "after: " << std::endl << _solution << std::endl << std::endl;
+		if (_lastSolverType == SolverType::Null || _lastSolverType != solverType)
+		{
+			MakeSpaceOperator(solverType);
+
+			switch (solverType)
+			{
+				// A = I + dt * L
+				case SolverType::ExplicitEuler:
+				case SolverType::LaxWendroff:
+					_rightTimeOperator.resize(_spaceOperator.rows(), _spaceOperator.cols());
+					_rightTimeOperator.setIdentity();
+					_rightTimeOperator += _spaceOperator * _inputData.deltaTime;
+					break;
+				// B = I - dt * L
+				case SolverType::ImplicitEuler:
+					_leftTimeOperator.resize(_spaceOperator.rows(), _spaceOperator.cols());
+					_leftTimeOperator.setIdentity();
+					_leftTimeOperator -= _spaceOperator * _inputData.deltaTime;
+
+					_sparseSolver.compute(_leftTimeOperator);
+					assert(_sparseSolver.info() == Eigen::Success);
+					break;
+				// B = I - 0.5 * dt * L
+				// A = I + 0.5 * dt * L
+				case SolverType::CrankNicolson:
+					_leftTimeOperator.resize(_spaceOperator.rows(), _spaceOperator.cols());
+					_leftTimeOperator.setIdentity();
+					_leftTimeOperator -= _spaceOperator * (Real(0.5) * _inputData.deltaTime);
+
+					_sparseSolver.compute(_leftTimeOperator);
+					assert(_sparseSolver.info() == Eigen::Success);
+
+					_rightTimeOperator.resize(_spaceOperator.rows(), _spaceOperator.cols());
+					_rightTimeOperator.setIdentity();
+					_rightTimeOperator += _spaceOperator * (Real(0.5) * _inputData.deltaTime);
+					break;
+
+				default:
+					break;
+			}
+			_lastSolverType = solverType;
+		}
+
+		switch (solverType)
+		{
+			case SolverType::ExplicitEuler:
+			case SolverType::LaxWendroff:
+				_cache.noalias() = _rightTimeOperator * _solution;
+				_solution = _cache;
+				break;
+			case SolverType::ImplicitEuler:
+				_cache.noalias() = _sparseSolver.solve(_solution);
+				assert(_sparseSolver.info() == Eigen::Success);
+				_solution = _cache;
+				break;
+			case SolverType::CrankNicolson:
+				_cache2.noalias() = _rightTimeOperator * _solution;
+				_cache.noalias() = _sparseSolver.solve(_cache2);
+				assert(_sparseSolver.info() == Eigen::Success);
+				_solution = _cache;
+				break;
+			default:
+				break;
+		}
 
 		this->SetZeroFluxBoundaryConditions();
 	}

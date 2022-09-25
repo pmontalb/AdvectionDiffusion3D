@@ -101,23 +101,29 @@ namespace pde
 					switch (_configuration.solverType)
 					{
 						case SolverType::ExplicitEuler:
-							_solution[GetIndex(i, j, k)] -= dt * (advection + diffusion);
+							_solution[GetIndex(i, j, k)] += dt * (advection + diffusion);
 							break;
 						case SolverType::LaxWendroff:
 							{
-								const auto velocityDiffusionX = (u[GetIndex(i + 1, j, k)] - two * u[GetIndex(i, j, k)] + u[GetIndex(i - 1, j, k)]) / (dx * dx);
-								const auto velocityDiffusionY = (v[GetIndex(i, j + 1, k)] - two * v[GetIndex(i, j, k)] + v[GetIndex(i, j - 1, k)]) / (dy * dy);
-								const auto velocityDiffusionZ = (w[GetIndex(i, j, k + 1)] - two * w[GetIndex(i, j, k)] + w[GetIndex(i, j, k - 1)]) / (dz * dz);
+								const auto crossDiffusionX = (u[GetIndex(i + 1, j, k)] * _solution[GetIndex(i + 1, j, k)] - two * u[GetIndex(i, j, k)] * _solution[GetIndex(i, j, k)] +
+															  u[GetIndex(i - 1, j, k)] * _solution[GetIndex(i - 1, j, k)]) /
+															 (dx * dx);
+								const auto crossDiffusionY = (v[GetIndex(i, j + 1, k)] * _solution[GetIndex(i, j + 1, k)] - two * v[GetIndex(i, j, k)] * _solution[GetIndex(i, j, k)] +
+															  v[GetIndex(i, j - 1, k)] * _solution[GetIndex(i, j - 1, k)]) /
+															 (dy * dy);
+								const auto crossDiffusionZ = (w[GetIndex(i, j, k + 1)] * _solution[GetIndex(i, j, k + 1)] - two * w[GetIndex(i, j, k)] * _solution[GetIndex(i, j, k)] +
+															  w[GetIndex(i, j, k - 1)] * _solution[GetIndex(i, j, k - 1)]) /
+															 (dz * dz);
 
 								const auto velocityGradientX = (u[GetIndex(i + 1, j, k)] - u[GetIndex(i - 1, j, k)]) / (two * dx);
 								const auto velocityGradientY = (v[GetIndex(i, j + 1, k)] - v[GetIndex(i, j - 1, k)]) / (two * dy);
 								const auto velocityGradientZ = (w[GetIndex(i, j, k + 1)] - w[GetIndex(i, j, k - 1)]) / (two * dz);
 								const auto velocityGradient = velocityGradientX + velocityGradientY + velocityGradientZ;
 
-								_solution[GetIndex(i, j, k)] -= dt * (advection + diffusion) * (one + half * dt * velocityGradient);
-								_solution[GetIndex(i, j, k)] -= half * dt * dt * u[GetIndex(i, j, k)] * velocityDiffusionX;
-								_solution[GetIndex(i, j, k)] -= half * dt * dt * v[GetIndex(i, j, k)] * velocityDiffusionY;
-								_solution[GetIndex(i, j, k)] -= half * dt * dt * w[GetIndex(i, j, k)] * velocityDiffusionZ;
+								_solution[GetIndex(i, j, k)] += dt * (advection + diffusion) * (one + half * dt * velocityGradient);
+								_solution[GetIndex(i, j, k)] += half * dt * dt * u[GetIndex(i, j, k)] * crossDiffusionX;
+								_solution[GetIndex(i, j, k)] += half * dt * dt * v[GetIndex(i, j, k)] * crossDiffusionY;
+								_solution[GetIndex(i, j, k)] += half * dt * dt * w[GetIndex(i, j, k)] * crossDiffusionZ;
 								break;
 							}
 						default:
@@ -174,8 +180,7 @@ namespace pde
 	}
 
 	template<typename Real>
-	LinearOperatorProblem<Real>::LinearOperatorProblem(const InputData<Real>& inputData, pde::Configuration configuration) noexcept
-		: Problem<Real>(inputData, configuration)
+	LinearOperatorProblem<Real>::LinearOperatorProblem(const InputData<Real>& inputData, pde::Configuration configuration) noexcept : Problem<Real>(inputData, configuration)
 	{
 		const auto dx = _inputData.spaceGrids[0][1] - _inputData.spaceGrids[0][0];
 		const auto dy = _inputData.spaceGrids[1][1] - _inputData.spaceGrids[1][0];
@@ -237,7 +242,7 @@ namespace pde
 						const auto velocityGradientY = (v[indexPlusY] - v[indexMinusY]) / (two * dy);
 						const auto velocityGradientZ = (w[indexPlusZ] - w[indexMinusZ]) / (two * dz);
 						const auto velocityGradient = velocityGradientX + velocityGradientY + velocityGradientZ;
-						adjustingFactor = -one - half * _inputData.deltaTime * velocityGradient;
+						adjustingFactor = one + half * _inputData.deltaTime * velocityGradient;
 					}
 
 					auto diagonal = -two * (Kx / (dx * dx) + Ky / (dy * dy) + Kz / (dz * dz));
@@ -245,9 +250,9 @@ namespace pde
 					{
 						diagonal *= adjustingFactor;
 
-						diagonal -= half * _inputData.deltaTime * u[index] * u[index] * (-two / (dx * dx));
-						diagonal -= half * _inputData.deltaTime * v[index] * v[index] * (-two / (dy * dy));
-						diagonal -= half * _inputData.deltaTime * w[index] * w[index] * (-two / (dz * dz));
+						diagonal += half * _inputData.deltaTime * u[index] * u[index] * (-two / (dx * dx));
+						diagonal += half * _inputData.deltaTime * v[index] * v[index] * (-two / (dy * dy));
+						diagonal += half * _inputData.deltaTime * w[index] * w[index] * (-two / (dz * dz));
 					}
 					nonZeroElements.emplace_back(index, index, diagonal);
 
@@ -256,7 +261,7 @@ namespace pde
 					if (_configuration.solverType == SolverType::LaxWendroff)
 					{
 						upDiagonalX *= adjustingFactor;
-						upDiagonalX -= half * _inputData.deltaTime * u[indexPlusX] * (u[indexPlusX] / (dx * dx));
+						upDiagonalX += half * _inputData.deltaTime * u[indexPlusX] * (u[indexPlusX] / (dx * dx));
 					}
 					nonZeroElements.emplace_back(index, indexPlusX, upDiagonalX);
 
@@ -265,7 +270,7 @@ namespace pde
 					if (_configuration.solverType == SolverType::LaxWendroff)
 					{
 						downDiagonalX *= adjustingFactor;
-						downDiagonalX -= half * _inputData.deltaTime * u[indexMinusX] * (u[indexMinusX] / (dx * dx));
+						downDiagonalX += half * _inputData.deltaTime * u[indexMinusX] * (u[indexMinusX] / (dx * dx));
 					}
 					nonZeroElements.emplace_back(index, indexMinusX, downDiagonalX);
 
@@ -274,7 +279,7 @@ namespace pde
 					if (_configuration.solverType == SolverType::LaxWendroff)
 					{
 						upDiagonalY *= adjustingFactor;
-						upDiagonalY -= half * _inputData.deltaTime * v[indexPlusY] * (v[indexPlusY] / (dy * dy));
+						upDiagonalY += half * _inputData.deltaTime * v[indexPlusY] * (v[indexPlusY] / (dy * dy));
 					}
 					nonZeroElements.emplace_back(index, indexPlusY, upDiagonalY);
 
@@ -283,7 +288,7 @@ namespace pde
 					if (_configuration.solverType == SolverType::LaxWendroff)
 					{
 						downDiagonalY *= adjustingFactor;
-						downDiagonalY -= half * _inputData.deltaTime * v[indexMinusY] * (v[indexMinusY] / (dy * dy));
+						downDiagonalY += half * _inputData.deltaTime * v[indexMinusY] * (v[indexMinusY] / (dy * dy));
 					}
 					nonZeroElements.emplace_back(index, indexMinusY, downDiagonalY);
 
@@ -292,7 +297,7 @@ namespace pde
 					if (_configuration.solverType == SolverType::LaxWendroff)
 					{
 						upDiagonalZ *= adjustingFactor;
-						upDiagonalZ -= half * _inputData.deltaTime * w[indexPlusZ] * (w[indexPlusZ] / (dz * dz));
+						upDiagonalZ += half * _inputData.deltaTime * w[indexPlusZ] * (w[indexPlusZ] / (dz * dz));
 					}
 					nonZeroElements.emplace_back(index, indexPlusZ, upDiagonalZ);
 
@@ -301,7 +306,7 @@ namespace pde
 					if (_configuration.solverType == SolverType::LaxWendroff)
 					{
 						downDiagonalZ *= adjustingFactor;
-						downDiagonalZ -= half * _inputData.deltaTime * w[indexMinusZ] * (w[indexMinusZ] / (dz * dz));
+						downDiagonalZ += half * _inputData.deltaTime * w[indexMinusZ] * (w[indexMinusZ] / (dz * dz));
 					}
 					nonZeroElements.emplace_back(index, indexMinusZ, downDiagonalZ);
 					assert(nonZeroElements.size() <= 7 * static_cast<size_t>(totalSize));
@@ -316,16 +321,16 @@ namespace pde
 		// A = I + dt * L
 		_spaceOperator *= _inputData.deltaTime;
 		_timeOperator += _spaceOperator;
-//		std::cout << _timeOperator << std::endl;
+		//		std::cout << _timeOperator << std::endl;
 	}
 
 	template<typename Real>
 	void LinearOperatorProblem<Real>::Advance() noexcept
 	{
-//		std::cout << "pre: " << std::endl << _solution << std::endl;
+		//		std::cout << "pre: " << std::endl << _solution << std::endl;
 		_cache = _timeOperator * _solution;
 		_solution = _cache;
-//		std::cout << "after: " << std::endl << _solution << std::endl << std::endl;
+		//		std::cout << "after: " << std::endl << _solution << std::endl << std::endl;
 
 		this->SetZeroFluxBoundaryConditions();
 	}
@@ -336,4 +341,3 @@ template class pde::Problem<double>;
 
 template class pde::LinearOperatorProblem<float>;
 template class pde::LinearOperatorProblem<double>;
-

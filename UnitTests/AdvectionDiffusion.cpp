@@ -153,7 +153,7 @@ TEST_F(AdvectionDiffusionTests, ConsistencyWithLinearOperator)
 					{
 						for (std::size_t j = 1; j < nSpacePoints[1] - 1; ++j)
 						{
-							EXPECT_NEAR(solution[GetIndex(i, j, k)], linearOperatorSolution[GetIndex(i, j, k)], 5.5e-4) << i << "|" << j << "|" << k << " | --- " << n;
+							EXPECT_NEAR(solution[GetIndex(i, j, k)], linearOperatorSolution[GetIndex(i, j, k)], 1e-6) << i << "|" << j << "|" << k << " | --- " << n;
 						}
 					}
 				}
@@ -178,7 +178,7 @@ TEST_F(AdvectionDiffusionTests, ConsistencyWithLinearOperator)
 					{
 						for (std::size_t j = 1; j < nSpacePoints[1] - 1; ++j)
 						{
-							EXPECT_NEAR(solution[GetIndex(i, j, k)], linearOperatorSolution[GetIndex(i, j, k)], 5e-10) << i << "|" << j << "|" << k << " | --- " << n;
+							EXPECT_NEAR(solution[GetIndex(i, j, k)], linearOperatorSolution[GetIndex(i, j, k)], 5e-9) << i << "|" << j << "|" << k << " | --- " << n;
 						}
 					}
 				}

@@ -190,26 +190,26 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 								if (axisIdx == 0)
 								{
 									const auto characteristicX =
-										inputDataFloat.spaceGrids[0][i] - velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+										inputDataFloat.spaceGrids[0][i] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataFloat.spaceGrids[1][j], inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									EXPECT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									EXPECT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 1)
 								{
 									const auto characteristicY =
-										inputDataFloat.spaceGrids[1][j] - velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+										inputDataFloat.spaceGrids[1][j] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], characteristicY, inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 2)
 								{
 									const auto characteristicZ =
-										inputDataFloat.spaceGrids[2][k] - velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+										inputDataFloat.spaceGrids[2][k] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], inputDataFloat.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 							}
 						}
@@ -244,26 +244,26 @@ TEST_F(TransportEquationTests, TransportAlongAxes)
 								if (axisIdx == 0)
 								{
 									const auto characteristicX =
-										inputDataDouble.spaceGrids[0][i] - velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+										inputDataDouble.spaceGrids[0][i] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataDouble.spaceGrids[1][j], inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									EXPECT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									EXPECT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 1)
 								{
 									const auto characteristicY =
-										inputDataDouble.spaceGrids[1][j] - velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+										inputDataDouble.spaceGrids[1][j] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], characteristicY, inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 								else if (axisIdx == 2)
 								{
 									const auto characteristicZ =
-										inputDataDouble.spaceGrids[2][k] - velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+										inputDataDouble.spaceGrids[2][k] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], inputDataDouble.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
-									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
+									ASSERT_NEAR(actual, expected, 6.6e-3) << n << " | " << i << " | " << j << " | " << k;
 								}
 							}
 						}
@@ -384,7 +384,7 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 								if (axisIdx == 0)
 								{
 									const auto characteristicX =
-										inputDataFloat.spaceGrids[0][i] - velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+										inputDataFloat.spaceGrids[0][i] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataFloat.spaceGrids[1][j], inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k << " --- " << static_cast<int>(solver);
@@ -392,7 +392,7 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 								else if (axisIdx == 1)
 								{
 									const auto characteristicY =
-										inputDataFloat.spaceGrids[1][j] - velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+										inputDataFloat.spaceGrids[1][j] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], characteristicY, inputDataFloat.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
@@ -400,7 +400,7 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 								else if (axisIdx == 2)
 								{
 									const auto characteristicZ =
-										inputDataFloat.spaceGrids[2][k] - velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
+										inputDataFloat.spaceGrids[2][k] + velocity * inputDataFloat.deltaTime * static_cast<float>(n + 1);
 									const auto expected = InitialCondition(inputDataFloat.spaceGrids[0][i], inputDataFloat.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
@@ -438,7 +438,7 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 								if (axisIdx == 0)
 								{
 									const auto characteristicX =
-										inputDataDouble.spaceGrids[0][i] - velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+										inputDataDouble.spaceGrids[0][i] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(characteristicX, inputDataDouble.spaceGrids[1][j], inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									EXPECT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
@@ -446,7 +446,7 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 								else if (axisIdx == 1)
 								{
 									const auto characteristicY =
-										inputDataDouble.spaceGrids[1][j] - velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+										inputDataDouble.spaceGrids[1][j] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], characteristicY, inputDataDouble.spaceGrids[2][k]);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;
@@ -454,7 +454,7 @@ TEST_F(TransportEquationTestsWithLinearOpeator, TransportAlongAxes)
 								else if (axisIdx == 2)
 								{
 									const auto characteristicZ =
-										inputDataDouble.spaceGrids[2][k] - velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
+										inputDataDouble.spaceGrids[2][k] + velocity * inputDataDouble.deltaTime * static_cast<double>(n + 1);
 									const auto expected = InitialCondition(inputDataDouble.spaceGrids[0][i], inputDataDouble.spaceGrids[1][j], characteristicZ);
 									const auto actual = solution[GetIndex(i, j, k)];
 									ASSERT_NEAR(actual, expected, 6.5e-3) << n << " | " << i << " | " << j << " | " << k;

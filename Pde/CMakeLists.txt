@@ -6,9 +6,8 @@ create_library(
 		Pde
 	SOURCES
 		Problem.cpp
-	SYSTEM_DEPENDENCIES
-		Eigen3::Eigen
-		#MKL::MKL
+	DEPENDENCIES
+		TimeDiscretizers
 )
 
 create_executable(
@@ -18,4 +17,13 @@ create_executable(
 		Debug.cpp
 	DEPENDENCIES
 		Pde
+)
+
+create_executable(
+	NAME
+		pdeProfiler
+	SOURCES
+		Profiler.cpp
+	DEPENDENCIES
+		Pde Profiler
 )

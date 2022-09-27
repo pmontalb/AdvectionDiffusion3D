@@ -15,7 +15,7 @@ static constexpr size_t totalSize = nSpacePoints[0] * nSpacePoints[1] * nSpacePo
 template<typename Real>
 [[nodiscard]] static constexpr Real InitialCondition(const Real x, const Real y, const Real z) noexcept
 {
-	return Real(1.0)+0*x +0*y + 0*z;//std::exp(-Real(2.0) * (x * x + y * y + z * z));
+	return std::exp(-Real(2.0) * (x * x + y * y + z * z));
 	//		return std::sin(x + y + 0 * z);
 }
 

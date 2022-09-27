@@ -10,5 +10,9 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 #find_package(MKL REQUIRED)
 #add_compile_definitions(EIGEN_USE_MKL_ALL)
 
+#find_package(OpenMP REQUIRED)
+
+add_subdirectory(Discretizers)
 add_subdirectory(Pde)
 add_subdirectory(UnitTests)
+add_subdirectory(Profiler)

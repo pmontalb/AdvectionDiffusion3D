@@ -10,6 +10,18 @@ create_library(
 		gtest
 )
 
+
+create_test(
+	NAME
+		laUnitTests
+	SOURCES
+		TridiagonalSolver.cpp
+	DEPENDENCIES
+		testMain
+	SYSTEM_DEPENDENCIES
+		Eigen3::Eigen
+)
+
 create_test(
 	NAME
 		pdeUnitTests

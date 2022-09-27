@@ -3,21 +3,16 @@
 
 #include "InputData.h"
 #include "SolverType.h"
+#include "Index.h"
+#include "Discretizers/ISpaceDiscretizer.h"
+#include "Discretizers/ITimeDiscretizer.h"
 
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-// #include <Eigen/PardisoSupport>
-#include <Eigen/Sparse>
-#include <Eigen/SparseCholesky>
-#include <Eigen/SparseQR>
+#include <Eigen/Eigen>
+
+#include <memory>
 
 namespace pde
 {
-	[[nodiscard]] static constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k, const std::array<std::size_t, 3>& nSpacePoints) noexcept
-	{
-		return k * nSpacePoints[0] * nSpacePoints[1] + i * nSpacePoints[0] + j;
-	}
-
 	namespace detail
 	{
 		template<typename Real>
@@ -71,23 +66,9 @@ namespace pde
 		using Problem<Real>::_inputData;
 		using Problem<Real>::_solution;
 		using Problem<Real>::_nSpacePoints;
-		Eigen::VectorX<Real> _cache;
-		Eigen::VectorX<Real> _cache2;
 
-		using SparseMatrix = Eigen::SparseMatrix<Real>;
-		SparseMatrix _spaceOperator {};
-		SparseMatrix _rightTimeOperator {};
-		SparseMatrix _leftTimeOperator {};
-
-		//		using SparseSolver = Eigen::PardisoLDLT<SparseMatrix>;
-//				using SparseSolver = Eigen::SimplicialLLT<SparseMatrix>;
-//				using SparseSolver = Eigen::SimplicialLDLT<SparseMatrix>;
-//		using SparseSolver = Eigen::ConjugateGradient<SparseMatrix, Eigen::Lower | Eigen::Upper>;
-//		using SparseSolver = Eigen::BiCGSTAB<SparseMatrix>;
-		using SparseSolver = Eigen::SparseLU<SparseMatrix>;
-//		using SparseSolver = Eigen::SparseQR<SparseMatrix, Eigen::COLAMDOrdering<int>>;
-		SparseSolver _sparseSolver;
-
+		std::unique_ptr<ISpaceDiscretizer<Real>> _spaceDiscretizer {};
+		std::unique_ptr<ITimeDiscretizer<Real>> _timeDiscretizer {};
 
 		SolverType _lastSolverType = SolverType::Null;
 	};

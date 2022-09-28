@@ -22,7 +22,7 @@ template<typename Real>
 template<typename Real>
 static void SetUpInputData(pde::InputData<Real>& inputData)
 {
-	inputData.diffusionCoefficients.fill(Real(0.));
+	inputData.diffusionCoefficients.fill(Real(0.5));
 	inputData.deltaTime = Real(1e-2);
 
 	inputData.velocityField[0] = std::vector<Real>(totalSize, Real(1));
@@ -99,7 +99,7 @@ int main(int /*argc*/, char** /*argv*/)
 	pde::LinearOperatorProblem<Real> problem(inputData);
 	for (size_t n = 0; n < 600; ++n)
 	{
-		problem.Advance(pde::SolverType::ImplicitEuler);
+		problem.Advance(pde::SolverType::ADI);
 		const auto& solution = problem.GetSolution();
 		ToFile(ofs, solution);
 	}

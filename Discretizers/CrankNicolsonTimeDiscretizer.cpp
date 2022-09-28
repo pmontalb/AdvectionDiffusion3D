@@ -25,10 +25,8 @@ namespace pde
 	void CrankNicolsonTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) noexcept
 	{
 		_cacheProduct.noalias() = _rightOperator * in;
-		_cacheSolve.noalias() = _solver.solve(_cacheProduct);
-		assert(_sparseSolver.info() == Eigen::Success);
-
-		out = _cacheSolve;
+		out.noalias() = _solver.solve(_cacheProduct);
+		assert(_solver.info() == Eigen::Success);
 	}
 
 }	 // namespace pde

@@ -71,6 +71,7 @@ namespace pde
 		std::unique_ptr<ITimeDiscretizer<Real>> _timeDiscretizer {};
 
 		SolverType _lastSolverType = SolverType::Null;
+		Eigen::VectorX<Real> _cache;
 	};
 }	 // namespace pde
 

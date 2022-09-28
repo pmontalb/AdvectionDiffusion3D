@@ -45,7 +45,6 @@ namespace pde
 		SparseMatrix _leftOperator {};
 		SparseMatrix _rightOperator {};
 
-		Eigen::VectorX<Real> _cacheSolve {};
 		Eigen::VectorX<Real> _cacheProduct {};
 	};
 }	 // namespace pde

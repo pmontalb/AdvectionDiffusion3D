@@ -2,11 +2,11 @@
 #pragma once
 
 #include "ISpaceDiscretizer.h"
-#include "Pde/InputData.h"
 #include "Pde/Index.h"
+#include "Pde/InputData.h"
 #include "Pde/SolverType.h"
 
-#include <Eigen/Eigen>
+#include "LinearAlgebra/TridiagonalMatrix.h"
 
 namespace pde
 {
@@ -14,20 +14,17 @@ namespace pde
 	class AdiSpaceDiscretizer final: public ISpaceDiscretizer<Real>
 	{
 	public:
-		AdiSpaceDiscretizer(const InputData<Real>& inputData, const std::array<std::size_t, 3>& nSpacePoints)
-			: _inputData(inputData), _nSpacePoints(nSpacePoints)
-		{
-		}
-
-		[[nodiscard]] const auto& GetOperator() const noexcept { return _operator; }
-
+		AdiSpaceDiscretizer(const InputData<Real>& inputData, const std::array<std::size_t, 3>& nSpacePoints);
 		bool Compute() noexcept override;
 
+		const auto& GetSpaceDiscretizations() const noexcept { return _spaceDiscretizations; }
+		const auto& GetNumberOfSpacePoints() const noexcept { return _nSpacePoints; }
 	private:
 		const InputData<Real>& _inputData;
+		const std::array<std::size_t, 3>& _nSpacePoints;
 
-		using SparseMatrix = Eigen::SparseMatrix<Real>;
-		SparseMatrix _operator {};
+		using TridiagonalMatrices = std::vector<la::TridiagonalMatrix<Real>>;
+		std::array<TridiagonalMatrices, 3> _spaceDiscretizations;
 	};
 }	 // namespace pde
 

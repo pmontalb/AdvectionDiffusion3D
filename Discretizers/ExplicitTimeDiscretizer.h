@@ -26,8 +26,6 @@ namespace pde
 
 		using SparseMatrix = Eigen::SparseMatrix<Real>;
 		SparseMatrix _operator {};
-
-		Eigen::VectorX<Real> _cache {};
 	};
 }	 // namespace pde
 

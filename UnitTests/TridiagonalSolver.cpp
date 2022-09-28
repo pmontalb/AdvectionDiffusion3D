@@ -59,7 +59,7 @@ TEST_F(TridiagonalSolverTests, Regression)
 		la::TridiagonalMatrix<float> A(10);
 		A.SetIdentity();
 		for (size_t i = 0; i < A.Size(); ++i)
-			A[i] = { 0*std::sin(0.5f * static_cast<float>(i) + 1), std::cos(0.5f * static_cast<float>(i) + 1), 0*std::exp(0.05f * static_cast<float>(i) + 1) };
+			A[i] = { std::sin(0.5f * static_cast<float>(i) + 1), std::cos(0.5f * static_cast<float>(i) + 1), std::exp(0.05f * static_cast<float>(i) + 1) };
 
 		Eigen::VectorX<float> x;
 		x.resize(static_cast<int>(A.Size()));
@@ -74,7 +74,7 @@ TEST_F(TridiagonalSolverTests, Regression)
 		const auto z = A.Dot(y);
 		for (int i = 0; i < static_cast<int>(A.Size()); ++i)
 		{
-			ASSERT_FLOAT_EQ(x[i], z[i]) << i;
+			EXPECT_NEAR(x[i], z[i], 7e-5) << i;
 		}
 	}
 
@@ -83,7 +83,7 @@ TEST_F(TridiagonalSolverTests, Regression)
 		la::TridiagonalMatrix<double> A(10);
 		A.SetIdentity();
 		for (size_t i = 0; i < A.Size(); ++i)
-			A[i] = { 0*std::sin(0.5 * static_cast<double>(i) + 1), std::cos(0.5 * static_cast<double>(i) + 1), 0*std::exp(0.05 * static_cast<double>(i) + 1) };
+			A[i] = { std::sin(0.5 * static_cast<double>(i) + 1), std::cos(0.5 * static_cast<double>(i) + 1), std::exp(0.05 * static_cast<double>(i) + 1) };
 
 		Eigen::VectorX<double> x;
 		x.resize(static_cast<int>(A.Size()));
@@ -98,7 +98,7 @@ TEST_F(TridiagonalSolverTests, Regression)
 		const auto z = A.Dot(y);
 		for (int i = 0; i < static_cast<int>(A.Size()); ++i)
 		{
-			ASSERT_DOUBLE_EQ(x[i], z[i]) << i;
+			EXPECT_NEAR(x[i], z[i], 1.72e-13) << i;
 		}
 	}
 }

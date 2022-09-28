@@ -2,10 +2,14 @@
 #include "Problem.h"
 
 #include "Discretizers/CenteredDifferenceSpaceDiscretizer.h"
+#include "Discretizers/AdiSpaceDiscretizer.h"
+
 #include "Discretizers/ExplicitTimeDiscretizer.h"
 #include "Discretizers/ImplicitTimeDiscretizer.h"
 #include "Discretizers/CrankNicolsonTimeDiscretizer.h"
+#include "Discretizers/AdiTimeDiscretizer.h"
 
+#include "Pde/Tolerance.h"
 
 #include <Eigen/Sparse>
 
@@ -15,24 +19,6 @@
 
 namespace pde
 {
-	namespace detail
-	{
-		template<typename T>
-		struct Tolerance;
-
-		template<>
-		struct Tolerance<float>
-		{
-			static constexpr float value = 1e-7f;
-		};
-
-		template<>
-		struct Tolerance<double>
-		{
-			static constexpr double value = 1e-7;
-		};
-	}	 // namespace detail
-
 	template<typename Real>
 	Problem<Real>::Problem(const InputData<Real>& inputData) noexcept : _inputData(inputData)
 	{
@@ -50,9 +36,9 @@ namespace pde
 		const auto dx = _inputData.spaceGrids[0][1] - _inputData.spaceGrids[0][0];
 		const auto dy = _inputData.spaceGrids[1][1] - _inputData.spaceGrids[1][0];
 		const auto dz = _inputData.spaceGrids[2][1] - _inputData.spaceGrids[2][0];
-		assert(std::isfinite(dx) && dx > detail::Tolerance<Real>::value);
-		assert(std::isfinite(dy) && dy > detail::Tolerance<Real>::value);
-		assert(std::isfinite(dz) && dz > detail::Tolerance<Real>::value);
+		assert(std::isfinite(dx) && dx > Tolerance<Real>::value);
+		assert(std::isfinite(dy) && dy > Tolerance<Real>::value);
+		assert(std::isfinite(dz) && dz > Tolerance<Real>::value);
 
 		static constexpr auto one = Real(1.0);
 		static constexpr auto two = Real(2.0);
@@ -66,7 +52,7 @@ namespace pde
 		assert(w.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
 
 		const auto dt = _inputData.deltaTime;
-		assert(std::isfinite(dt) && dt > detail::Tolerance<Real>::value);
+		assert(std::isfinite(dt) && dt > Tolerance<Real>::value);
 
 		const auto Kx = _inputData.diffusionCoefficients[0];
 		const auto Ky = _inputData.diffusionCoefficients[1];
@@ -77,13 +63,13 @@ namespace pde
 
 		for (std::size_t k = 1; k < _nSpacePoints[2] - 1; ++k)
 		{
-			assert(std::abs(_inputData.spaceGrids[2][k + 1] - _inputData.spaceGrids[2][k] - dz) < Real(2) * detail::Tolerance<Real>::value);
+			assert(std::abs(_inputData.spaceGrids[2][k + 1] - _inputData.spaceGrids[2][k] - dz) < Real(2) * Tolerance<Real>::value);
 			for (std::size_t i = 1; i < _nSpacePoints[0] - 1; ++i)
 			{
-				assert(std::abs(_inputData.spaceGrids[0][i + 1] - _inputData.spaceGrids[0][i] - dx) < Real(2) * detail::Tolerance<Real>::value);
+				assert(std::abs(_inputData.spaceGrids[0][i + 1] - _inputData.spaceGrids[0][i] - dx) < Real(2) * Tolerance<Real>::value);
 				for (std::size_t j = 1; j < _nSpacePoints[1] - 1; ++j)
 				{
-					assert(std::abs(_inputData.spaceGrids[1][j + 1] - _inputData.spaceGrids[1][j] - dx) < Real(2) * detail::Tolerance<Real>::value);
+					assert(std::abs(_inputData.spaceGrids[1][j + 1] - _inputData.spaceGrids[1][j] - dx) < Real(2) * Tolerance<Real>::value);
 
 					auto advectionX = (u[GetIndex(i + 1, j, k)] * _solution[GetIndex(i + 1, j, k)]);
 					advectionX -= (u[GetIndex(i - 1, j, k)] * _solution[GetIndex(i - 1, j, k)]);
@@ -199,6 +185,9 @@ namespace pde
 				case SolverType::CrankNicolson:
 					_spaceDiscretizer = std::make_unique<CenteredDifferenceSpaceDiscretizer<Real>>(_inputData, _nSpacePoints, solverType);
 					break;
+				case SolverType::ADI:
+					_spaceDiscretizer = std::make_unique<AdiSpaceDiscretizer<Real>>(_inputData, _nSpacePoints);
+					break;
 				default:
 					_spaceDiscretizer.reset();
 					assert(false);
@@ -234,6 +223,9 @@ namespace pde
 					case SolverType::CrankNicolson:
 						_timeDiscretizer = std::make_unique<CrankNicolsonTimeDiscretizer<Real>>(_inputData, static_cast<CenteredDifferenceSpaceDiscretizer<Real>&>(*_spaceDiscretizer));
 						break;
+					case SolverType::ADI:
+						_timeDiscretizer = std::make_unique<AdiTimeDiscretizer<Real>>(_inputData, static_cast<AdiSpaceDiscretizer<Real>&>(*_spaceDiscretizer));
+						break;
 
 					default:
 						_timeDiscretizer.reset();
@@ -249,9 +241,11 @@ namespace pde
 #endif
 
 			_lastSolverType = solverType;
+			_cache.resize(_solution.size());
 		}
 
-		_timeDiscretizer->Compute(_solution, _solution);
+		_timeDiscretizer->Compute(_cache, _solution);
+		_solution.noalias() = _cache;
 
 		this->SetZeroFluxBoundaryConditions();
 	}

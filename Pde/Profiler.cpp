@@ -85,7 +85,7 @@ int main(int /*argc*/, char** /*argv*/)
 {
 		constexpr std::size_t nSpacePoints[] = { 90, 100, 120, 150 };
 		constexpr pde::SolverType inlineSolvers[] = { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff };
-		constexpr pde::SolverType operatorSolvers[] = { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson };
+		constexpr pde::SolverType operatorSolvers[] = { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ADI };
 //		constexpr pde::SolverType operatorSolvers[] = { pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson };
 
 	Config config;

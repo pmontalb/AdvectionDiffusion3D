@@ -18,9 +18,8 @@ namespace pde
 	template<typename Real>
 	void ImplicitTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) noexcept
 	{
-		_cache.noalias() = _solver.solve(in);
-		assert(_sparseSolver.info() == Eigen::Success);
-		out = _cache;
+		out.noalias() = _solver.solve(in);
+		assert(_solver.info() == Eigen::Success);
 	}
 
 }	 // namespace pde

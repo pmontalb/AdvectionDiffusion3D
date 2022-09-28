@@ -43,8 +43,6 @@ namespace pde
 
 		SparseSolver _solver {};
 		SparseMatrix _operator {};
-
-		Eigen::VectorX<Real> _cache {};
 	};
 }	 // namespace pde
 

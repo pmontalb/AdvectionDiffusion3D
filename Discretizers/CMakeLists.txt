@@ -6,6 +6,7 @@ create_library(
 		SpaceDiscretizers
 	SOURCES
 		CenteredDifferenceSpaceDiscretizer.cpp
+		AdiSpaceDiscretizer.cpp
 	SYSTEM_DEPENDENCIES
 		Eigen3::Eigen
 #		MKL::MKL
@@ -18,6 +19,7 @@ create_library(
 		ExplicitTimeDiscretizer.cpp
 		ImplicitTimeDiscretizer.cpp
 		CrankNicolsonTimeDiscretizer.cpp
+		AdiTimeDiscretizer.cpp
 	DEPENDENCIES
 		SpaceDiscretizers
 )

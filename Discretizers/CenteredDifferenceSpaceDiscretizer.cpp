@@ -1,5 +1,6 @@
 
 #include "CenteredDifferenceSpaceDiscretizer.h"
+#include "Pde/Tolerance.h"
 
 namespace pde
 {
@@ -9,9 +10,9 @@ namespace pde
 		const auto dx = _inputData.spaceGrids[0][1] - _inputData.spaceGrids[0][0];
 		const auto dy = _inputData.spaceGrids[1][1] - _inputData.spaceGrids[1][0];
 		const auto dz = _inputData.spaceGrids[2][1] - _inputData.spaceGrids[2][0];
-		assert(std::isfinite(dx) && dx > detail::Tolerance<Real>::value);
-		assert(std::isfinite(dy) && dy > detail::Tolerance<Real>::value);
-		assert(std::isfinite(dz) && dz > detail::Tolerance<Real>::value);
+		assert(std::isfinite(dx) && dx > Tolerance<Real>::value);
+		assert(std::isfinite(dy) && dy > Tolerance<Real>::value);
+		assert(std::isfinite(dz) && dz > Tolerance<Real>::value);
 
 		static constexpr auto one = Real(1.0);
 		static constexpr auto two = Real(2.0);
@@ -24,7 +25,7 @@ namespace pde
 		assert(v.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
 		assert(w.size() == _nSpacePoints[0] * _nSpacePoints[1] * _nSpacePoints[2]);
 
-		assert(std::isfinite(_inputData.deltaTime) && _inputData.deltaTime > detail::Tolerance<Real>::value);
+		assert(std::isfinite(_inputData.deltaTime) && _inputData.deltaTime > Tolerance<Real>::value);
 
 		const auto Kx = _inputData.diffusionCoefficients[0];
 		const auto Ky = _inputData.diffusionCoefficients[1];

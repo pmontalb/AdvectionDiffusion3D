@@ -17,8 +17,7 @@ namespace pde
 	template<typename Real>
 	void ExplicitTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) noexcept
 	{
-		_cache.noalias() = _operator * in;
-		out = _cache;
+		out.noalias() = _operator * in;
 	}
 
 }	 // namespace pde

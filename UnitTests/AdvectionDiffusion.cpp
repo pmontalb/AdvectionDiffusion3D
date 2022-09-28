@@ -186,7 +186,7 @@ TEST_F(AdvectionDiffusionTests, ConsistencyWithLinearOperator)
 
 TEST_F(AdvectionDiffusionTests, LinearOperatorAdvanceNoChecks)
 {
-	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson })
+	for (auto solver : { pde::SolverType::ExplicitEuler, pde::SolverType::LaxWendroff, pde::SolverType::ImplicitEuler, pde::SolverType::CrankNicolson, pde::SolverType::ADI })
 	{
 		// test single precision
 		{

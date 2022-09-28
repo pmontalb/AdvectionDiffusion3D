@@ -1,0 +1,239 @@
+ done!
+N=90 | Precision: Single | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	7.005448 ms
+Median            : 	6.967123 ms
+Standard Deviation: 	0.080237 ms
+
+ done!
+N=90 | Precision: Double | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	7.285336 ms
+Median            : 	7.272159 ms
+Standard Deviation: 	0.045883 ms
+
+ done!
+N=90 | Precision: Single | Discretization: Inline | Solver:LaxWendroff
+Average           : 	9.932440 ms
+Median            : 	9.919401 ms
+Standard Deviation: 	0.050265 ms
+
+ done!
+N=90 | Precision: Double | Discretization: Inline | Solver:LaxWendroff
+Average           : 	10.028575 ms
+Median            : 	10.016615 ms
+Standard Deviation: 	0.063848 ms
+
+ done!
+N=90 | Precision: Single | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	11.388279 ms
+Median            : 	11.386586 ms
+Standard Deviation: 	0.008344 ms
+
+ done!
+N=90 | Precision: Double | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	12.090944 ms
+Median            : 	12.082311 ms
+Standard Deviation: 	0.050221 ms
+
+ done!
+N=90 | Precision: Single | Discretization: Operator | Solver:LaxWendroff
+Average           : 	11.414086 ms
+Median            : 	11.412381 ms
+Standard Deviation: 	0.011467 ms
+
+ done!
+N=90 | Precision: Double | Discretization: Operator | Solver:LaxWendroff
+Average           : 	12.065282 ms
+Median            : 	12.077467 ms
+Standard Deviation: 	0.125872 ms
+
+ done!
+N=90 | Precision: Single | Discretization: Operator | Solver:ADI
+Average           : 	30.316328 ms
+Median            : 	29.973001 ms
+Standard Deviation: 	0.839451 ms
+
+ done!
+N=90 | Precision: Double | Discretization: Operator | Solver:ADI
+Average           : 	35.354198 ms
+Median            : 	35.241724 ms
+Standard Deviation: 	0.621266 ms
+
+ done!
+N=100 | Precision: Single | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	9.597573 ms
+Median            : 	9.594130 ms
+Standard Deviation: 	0.009124 ms
+
+ done!
+N=100 | Precision: Double | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	10.050656 ms
+Median            : 	10.050155 ms
+Standard Deviation: 	0.008267 ms
+
+ done!
+N=100 | Precision: Single | Discretization: Inline | Solver:LaxWendroff
+Average           : 	13.712380 ms
+Median            : 	13.711627 ms
+Standard Deviation: 	0.008975 ms
+
+ done!
+N=100 | Precision: Double | Discretization: Inline | Solver:LaxWendroff
+Average           : 	13.835964 ms
+Median            : 	13.834693 ms
+Standard Deviation: 	0.007946 ms
+
+ done!
+N=100 | Precision: Single | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	15.813756 ms
+Median            : 	15.813519 ms
+Standard Deviation: 	0.017354 ms
+
+ done!
+N=100 | Precision: Double | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	16.861052 ms
+Median            : 	16.853849 ms
+Standard Deviation: 	0.043682 ms
+
+ done!
+N=100 | Precision: Single | Discretization: Operator | Solver:LaxWendroff
+Average           : 	15.818385 ms
+Median            : 	15.815518 ms
+Standard Deviation: 	0.014121 ms
+
+ done!
+N=100 | Precision: Double | Discretization: Operator | Solver:LaxWendroff
+Average           : 	16.829907 ms
+Median            : 	16.857390 ms
+Standard Deviation: 	0.213643 ms
+
+ done!
+N=100 | Precision: Single | Discretization: Operator | Solver:ADI
+Average           : 	40.901963 ms
+Median            : 	40.900228 ms
+Standard Deviation: 	0.215145 ms
+
+ done!
+N=100 | Precision: Double | Discretization: Operator | Solver:ADI
+Average           : 	47.505289 ms
+Median            : 	47.215146 ms
+Standard Deviation: 	0.855225 ms
+
+ done!
+N=120 | Precision: Single | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	16.859992 ms
+Median            : 	16.849904 ms
+Standard Deviation: 	0.064136 ms
+
+ done!
+N=120 | Precision: Double | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	17.620987 ms
+Median            : 	17.586554 ms
+Standard Deviation: 	0.095279 ms
+
+ done!
+N=120 | Precision: Single | Discretization: Inline | Solver:LaxWendroff
+Average           : 	24.076574 ms
+Median            : 	24.058238 ms
+Standard Deviation: 	0.109468 ms
+
+ done!
+N=120 | Precision: Double | Discretization: Inline | Solver:LaxWendroff
+Average           : 	24.783665 ms
+Median            : 	24.275438 ms
+Standard Deviation: 	1.231705 ms
+
+ done!
+N=120 | Precision: Single | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	27.623432 ms
+Median            : 	27.652115 ms
+Standard Deviation: 	0.579298 ms
+
+ done!
+N=120 | Precision: Double | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	30.022815 ms
+Median            : 	30.000341 ms
+Standard Deviation: 	1.006895 ms
+
+ done!
+N=120 | Precision: Single | Discretization: Operator | Solver:LaxWendroff
+Average           : 	28.064870 ms
+Median            : 	28.053710 ms
+Standard Deviation: 	0.043362 ms
+
+ done!
+N=120 | Precision: Double | Discretization: Operator | Solver:LaxWendroff
+Average           : 	29.837323 ms
+Median            : 	29.717781 ms
+Standard Deviation: 	0.648474 ms
+
+ done!
+N=120 | Precision: Single | Discretization: Operator | Solver:ADI
+Average           : 	71.359793 ms
+Median            : 	70.363833 ms
+Standard Deviation: 	1.914129 ms
+
+ done!
+N=120 | Precision: Double | Discretization: Operator | Solver:ADI
+Average           : 	83.411076 ms
+Median            : 	84.309941 ms
+Standard Deviation: 	2.545852 ms
+
+ done!
+N=150 | Precision: Single | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	33.509126 ms
+Median            : 	33.170728 ms
+Standard Deviation: 	1.291309 ms
+
+ done!
+N=150 | Precision: Double | Discretization: Inline | Solver:ExplicitEuler
+Average           : 	35.094604 ms
+Median            : 	35.124614 ms
+Standard Deviation: 	0.512627 ms
+
+ done!
+N=150 | Precision: Single | Discretization: Inline | Solver:LaxWendroff
+Average           : 	47.592248 ms
+Median            : 	47.636471 ms
+Standard Deviation: 	0.151674 ms
+
+ done!
+N=150 | Precision: Double | Discretization: Inline | Solver:LaxWendroff
+Average           : 	47.883597 ms
+Median            : 	47.618286 ms
+Standard Deviation: 	0.489603 ms
+
+ done!
+N=150 | Precision: Single | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	55.823635 ms
+Median            : 	55.764831 ms
+Standard Deviation: 	0.320482 ms
+
+ done!
+N=150 | Precision: Double | Discretization: Operator | Solver:ExplicitEuler
+Average           : 	58.455138 ms
+Median            : 	58.458072 ms
+Standard Deviation: 	0.108709 ms
+
+ done!
+N=150 | Precision: Single | Discretization: Operator | Solver:LaxWendroff
+Average           : 	55.660950 ms
+Median            : 	55.768110 ms
+Standard Deviation: 	1.350263 ms
+
+ done!
+N=150 | Precision: Double | Discretization: Operator | Solver:LaxWendroff
+Average           : 	59.248911 ms
+Median            : 	59.357573 ms
+Standard Deviation: 	0.565626 ms
+
+ done!
+N=150 | Precision: Single | Discretization: Operator | Solver:ADI
+Average           : 	138.740482 ms
+Median            : 	137.388430 ms
+Standard Deviation: 	3.286215 ms
+
+ done!
+N=150 | Precision: Double | Discretization: Operator | Solver:ADI
+Average           : 	161.608807 ms
+Median            : 	163.391904 ms
+Standard Deviation: 	4.281514 ms

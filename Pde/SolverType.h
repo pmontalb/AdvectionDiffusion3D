@@ -13,6 +13,7 @@ namespace pde
 		ImplicitEuler,
 		CrankNicolson,
 		LaxWendroff,
+		ADI,
 	};
 
 	constexpr std::string_view ToString(const SolverType type)
@@ -29,6 +30,8 @@ namespace pde
 				return "CrankNicolson";
 			case SolverType::LaxWendroff:
 				return "LaxWendroff";
+			case SolverType::ADI:
+				return "ADI";
 			default:
 				return "?";
 		}

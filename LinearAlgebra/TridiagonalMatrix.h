@@ -1,7 +1,11 @@
 
+#pragma once
+
 #include <vector>
 
 #include <Eigen/Eigen>
+
+#include <iostream>
 
 namespace la
 {
@@ -23,6 +27,7 @@ namespace la
 	class TridiagonalMatrix
 	{
 	public:
+		TridiagonalMatrix() = default;
 		TridiagonalMatrix(const std::size_t N)
 			: _data(N)
 		{
@@ -31,6 +36,12 @@ namespace la
 
 		auto& operator[](const std::size_t i) noexcept { return _data[i]; }
 		const auto& operator[](const std::size_t i) const noexcept { return _data[i]; }
+
+		auto& Front() noexcept { return _data.front(); }
+		const auto& Front() const noexcept { return _data.front(); }
+
+		auto& Back() noexcept { return _data.back(); }
+		const auto& Back() const noexcept { return _data.back(); }
 
 		void Resize(const std::size_t N) noexcept
 		{

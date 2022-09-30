@@ -100,9 +100,9 @@ namespace pde
 		const auto& spaceOperators = _spaceDiscretizer.GetSpaceDiscretizations();
 
 		// x-solve
-		for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
+		for (std::size_t j = 0; j < nSpacePoints[1]; ++j)
 		{
-			for (std::size_t j = 0; j < nSpacePoints[1]; ++j)
+			for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 			{
 				auto& leftOperatorX = _leftOperators[0][j + k * nSpacePoints[1]];
 				auto& rightOperatorX = _rightOperators[0][j + k * nSpacePoints[1]];
@@ -145,9 +145,9 @@ namespace pde
 		}
 
 		// y-solve
-		for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
+		for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
 		{
-			for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
+			for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
 			{
 				auto& leftOperatorY = _leftOperators[1][i + k * nSpacePoints[0]];
 				auto& rightOperatorY = _rightOperators[1][i + k * nSpacePoints[0]];

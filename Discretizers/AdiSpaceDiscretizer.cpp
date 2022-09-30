@@ -51,11 +51,11 @@ namespace pde
 		assert(std::isfinite(Kz) && Kz >= Real(0.0));
 
 		// discretize each dimension separately
-		for (std::size_t k = 1; k < _nSpacePoints[2] - 1; ++k)
+		for (std::size_t i = 1; i < _nSpacePoints[0] - 1; ++i)
 		{
-			for (std::size_t i = 1; i < _nSpacePoints[0] - 1; ++i)
+			for (std::size_t j = 1; j < _nSpacePoints[1] - 1; ++j)
 			{
-				for (std::size_t j = 1; j < _nSpacePoints[1] - 1; ++j)
+				for (std::size_t k = 1; k < _nSpacePoints[2] - 1; ++k)
 				{
 					// x
 					auto& xDiscretizer = _spaceDiscretizations[0][j + k * _nSpacePoints[1]][i];

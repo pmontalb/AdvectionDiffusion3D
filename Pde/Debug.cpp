@@ -1,5 +1,6 @@
 
 #include "Problem.h"
+#include "NpyCpp/Npy++/Npy++.h"
 
 #include <cmath>
 #include <iostream>
@@ -95,12 +96,16 @@ int main(int /*argc*/, char** /*argv*/)
 	pde::InputData<Real> inputData;
 	SetUpInputData(inputData);
 
-	std::ofstream ofs("/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/sol.txt", std::ios::out);
+	const std::string fileName = "/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/sol.txt";
 	pde::LinearOperatorProblem<Real> problem(inputData);
 	for (size_t n = 0; n < 600; ++n)
 	{
 		problem.Advance(pde::SolverType::ADI);
 		const auto& solution = problem.GetSolution();
-		ToFile(ofs, solution);
+		std::vector<double> solutionCopy { solution.begin(), solution.end() };
+		if (n == 0)
+			npypp::Save(fileName, solutionCopy, { inputData.spaceGrids[0].size(), inputData.spaceGrids[1].size(), inputData.spaceGrids[2].size() }, "w");
+		else
+			npypp::Save(fileName, solutionCopy, { inputData.spaceGrids[0].size(), inputData.spaceGrids[1].size(), inputData.spaceGrids[2].size() }, "a");
 	}
 }

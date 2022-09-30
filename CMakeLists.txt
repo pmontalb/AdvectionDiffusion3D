@@ -12,6 +12,9 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 #find_package(OpenMP REQUIRED)
 
+# Npy++ submodule
+add_subdirectory(NpyCpp ${CMAKE_BINARY_DIR}/AdvectionDiffusion3D/NpyCpp EXCLUDE_FROM_ALL)
+
 add_subdirectory(Discretizers)
 add_subdirectory(Pde)
 add_subdirectory(UnitTests)

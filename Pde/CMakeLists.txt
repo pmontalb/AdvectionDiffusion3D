@@ -16,7 +16,7 @@ create_executable(
 	SOURCES
 		Debug.cpp
 	DEPENDENCIES
-		Pde
+		Pde Npy++
 )
 
 create_executable(

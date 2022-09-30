@@ -4,3 +4,6 @@
 [submodule "Profiler"]
 	path = Profiler
 	url = git@github.com:pmontalb/Profiler.git
+[submodule "NpyCpp"]
+	path = NpyCpp
+	url = git@github.com:pmontalb/NpyCpp.git

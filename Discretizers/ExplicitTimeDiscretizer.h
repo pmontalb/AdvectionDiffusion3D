@@ -11,6 +11,20 @@
 
 namespace pde
 {
+	/*
+	 * Explicit Euler or Lax-Wendroff
+	 * Fully Explicit 7-banded diagonal linear system
+	 *
+	 * L is the centered difference space discretization operator (7-banded)
+	 * NB: for Lax-Wendroff scheme L contains some time components
+	 *
+	 * C_{n + 1} = (I - dt * L) * C_n
+	 *
+	 * +++ Very fast
+	 * --- Conditionally stable
+	 * --- (Explicit Euler only) Unstable if the PDE is advection-dominated
+	 * --- O(dt + dx^2)
+	 * */
 	template<typename Real>
 	class ExplicitTimeDiscretizer final: public ITimeDiscretizer<Real>
 	{

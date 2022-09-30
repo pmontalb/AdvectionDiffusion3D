@@ -18,6 +18,19 @@
 
 namespace pde
 {
+	/*
+	 * Crank-Nicolson
+	 * Fully Implicit 7-banded diagonal linear system
+	 *
+	 * L is the centered difference space discretization operator (7-banded)
+	 *
+	 * (I - 0.5 * dt * L) * C_{n + 1} = (I + 0.5 * dt * L) * C_n
+	 *
+	 * +++ Unconditionally stable
+	 * --- Unstable if the PDE is advection-dominated
+	 * +++ O(dt^2 + dx^2)
+	 * --- Prohibitively slow
+	 * */
 	template<typename Real>
 	class CrankNicolsonTimeDiscretizer final: public ITimeDiscretizer<Real>
 	{

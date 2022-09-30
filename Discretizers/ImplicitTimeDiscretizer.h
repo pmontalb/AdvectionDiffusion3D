@@ -18,6 +18,19 @@
 
 namespace pde
 {
+	/*
+	 * Implicit Euler
+	 * Fully Implicit 7-banded diagonal linear system
+	 *
+	 * L is the centered difference space discretization operator (7-banded)
+	 *
+	 * (I - dt * L) * C_{n + 1} = C_n
+	 *
+	 * +++ Unconditionally stable
+	 * --- Unstable if the PDE is advection-dominated
+	 * +++ O(dt + dx^2)
+	 * --- Prohibitively slow
+	 * */
 	template<typename Real>
 	class ImplicitTimeDiscretizer final: public ITimeDiscretizer<Real>
 	{

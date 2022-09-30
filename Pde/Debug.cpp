@@ -1,18 +1,15 @@
 
-#include "Problem.h"
 #include "NpyCpp/Npy++/Npy++.h"
+#include "Problem.h"
 
 #include <cmath>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 static constexpr std::array<size_t, 3> nSpacePoints = { 16, 16, 16 };
 static constexpr size_t totalSize = nSpacePoints[0] * nSpacePoints[1] * nSpacePoints[2];
 
-[[nodiscard]] static constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k) noexcept
-{
-	return pde::GetIndex(i, j, k, nSpacePoints);
-}
+[[nodiscard]] static constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k) noexcept { return pde::GetIndex(i, j, k, nSpacePoints); }
 template<typename Real>
 [[nodiscard]] static constexpr Real InitialCondition(const Real x, const Real y, const Real z) noexcept
 {
@@ -80,7 +77,7 @@ void Print(const std::vector<Real>& solution, const std::string& label = "soluti
 }
 
 template<typename VectorT>
-void ToFile(std::ofstream & ofs, const VectorT& solution, const std::string& label = "solution")
+void ToFile(std::ofstream& ofs, const VectorT& solution, const std::string& label = "solution")
 {
 	ofs << label << "= np.array([";
 	for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
@@ -90,7 +87,47 @@ void ToFile(std::ofstream & ofs, const VectorT& solution, const std::string& lab
 	ofs << "])" << std::endl;
 }
 
-int main(int /*argc*/, char** /*argv*/)
+inline void StabilityAnalysis()
+{
+	using Real = double;
+	pde::InputData<Real> inputData;
+	SetUpInputData(inputData);
+	inputData.deltaTime *= 10.0;
+
+	const std::string fileNameEE = "/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/explicitEuler.txt";
+	const std::string fileNameIE = "/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/implicitEuler.txt";
+	const std::string fileNameCN = "/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/crankNicolson.txt";
+	const std::string fileNameLW = "/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/laxWendroff.txt";
+	const std::string fileNameAD = "/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/adi.txt";
+
+	pde::LinearOperatorProblem<Real> problemEE(inputData);
+	pde::LinearOperatorProblem<Real> problemIE(inputData);
+	pde::LinearOperatorProblem<Real> problemCN(inputData);
+	pde::LinearOperatorProblem<Real> problemLW(inputData);
+	pde::LinearOperatorProblem<Real> problemAD(inputData);
+
+	const auto worker = [&](pde::LinearOperatorProblem<Real>& problem, const pde::SolverType solverType, const std::string& fileName, const bool append)
+	{
+		problem.Advance(solverType);
+		const auto& solution = problem.GetSolution();
+		std::vector<double> solutionCopy { solution.begin(), solution.end() };
+		if (!append)
+			npypp::Save(fileName, solutionCopy, { inputData.spaceGrids[0].size(), inputData.spaceGrids[1].size(), inputData.spaceGrids[2].size() }, "w");
+		else
+			npypp::Save(fileName, solutionCopy, { inputData.spaceGrids[0].size(), inputData.spaceGrids[1].size(), inputData.spaceGrids[2].size() }, "a");
+	};
+
+	for (size_t n = 0; n < 600; ++n)
+	{
+		worker(problemEE, pde::SolverType::ExplicitEuler, fileNameEE, n > 0);
+		worker(problemIE, pde::SolverType::ImplicitEuler, fileNameIE, n > 0);
+		worker(problemCN, pde::SolverType::CrankNicolson, fileNameCN, n > 0);
+		worker(problemLW, pde::SolverType::LaxWendroff, fileNameLW, n > 0);
+		worker(problemAD, pde::SolverType::ADI, fileNameAD, n > 0);
+	}
+}
+
+inline void SingleRun()
 {
 	using Real = double;
 	pde::InputData<Real> inputData;
@@ -109,3 +146,5 @@ int main(int /*argc*/, char** /*argv*/)
 			npypp::Save(fileName, solutionCopy, { inputData.spaceGrids[0].size(), inputData.spaceGrids[1].size(), inputData.spaceGrids[2].size() }, "a");
 	}
 }
+
+int main(int /*argc*/, char** /*argv*/) { StabilityAnalysis(); }

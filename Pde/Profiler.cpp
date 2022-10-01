@@ -67,6 +67,22 @@ private:
 	{
 		SetUpInputData(_inputData, this->_config.Nx, this->_config.Ny, this->_config.Nz);
 		_solver = std::make_unique<ProblemT>(_inputData);
+
+		const auto radius = Real(0.8);
+		const auto sourceStrength = Real(0.1);
+		_sourceTerm.resize(static_cast<long>(_inputData.initialCondition.size()));
+		_sourceTerm.fill(0.0);
+		for (std::size_t k = 0; k < this->_config.Nz; ++k)
+			for (std::size_t i = 0; i < this->_config.Nx; ++i)
+				for (std::size_t j = 0; j < this->_config.Ny; ++j)
+				{
+					const auto x = _inputData.spaceGrids[0][i] - _inputData.spaceGrids[0][this->_config.Nx / 2];
+					const auto y = _inputData.spaceGrids[1][j] - _inputData.spaceGrids[1][this->_config.Ny / 2];
+					const auto z = 0;
+					if (x * x + y * y + z * z > radius * radius)
+						continue;
+					_sourceTerm[static_cast<int>(GetIndex(i, j, k, this->_config.Nx, this->_config.Ny, this->_config.Nz))] = sourceStrength;
+				}
 	}
 
 	inline void OnEndImpl() noexcept { std::cout << " done!" << std::endl; }
@@ -74,11 +90,14 @@ private:
 	inline void RunImpl() noexcept
 	{
 		_solver->Advance(this->_config.solverType);
+//		_solver->Advance(this->_config.solverType, this->_sourceTerm);
+
 	}
 
 private:
 	pde::InputData<Real> _inputData;
 	std::unique_ptr<ProblemT> _solver = nullptr;
+	Eigen::VectorX<Real> _sourceTerm;
 };
 
 int main(int /*argc*/, char** /*argv*/)

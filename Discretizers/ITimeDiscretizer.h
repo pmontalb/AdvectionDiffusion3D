@@ -13,5 +13,6 @@ namespace pde
 
 		virtual bool Precompute() noexcept = 0;
 		virtual void Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) noexcept = 0;
+		virtual void Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>& sourceTerm) noexcept = 0;
 	};
 }	 // namespace pde

@@ -131,6 +131,13 @@ namespace pde
 	}
 
 	template<typename Real>
+	void Problem<Real>::Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
+		Advance(solverType);
+		_solution.noalias() += sourceTerm * _inputData.deltaTime;
+	}
+
+	template<typename Real>
 	void Problem<Real>::SetZeroFluxBoundaryConditions()
 	{
 		// *** Boundary Conditions on X ***
@@ -173,37 +180,7 @@ namespace pde
 	}
 
 	template<typename Real>
-	void LinearOperatorProblem<Real>::MakeSpaceOperator(const SolverType solverType) noexcept
-	{
-		if (!_spaceDiscretizer || _lastSolverType != solverType)
-		{
-			switch (solverType)
-			{
-				case SolverType::ExplicitEuler:
-				case SolverType::LaxWendroff:
-				case SolverType::ImplicitEuler:
-				case SolverType::CrankNicolson:
-					_spaceDiscretizer = std::make_unique<CenteredDifferenceSpaceDiscretizer<Real>>(_inputData, _nSpacePoints, solverType);
-					break;
-				case SolverType::ADI:
-					_spaceDiscretizer = std::make_unique<AdiSpaceDiscretizer<Real>>(_inputData, _nSpacePoints);
-					break;
-				default:
-					_spaceDiscretizer.reset();
-					assert(false);
-					break;
-			}
-		}
-#ifndef NDEBUG
-		const auto success = _spaceDiscretizer->Compute();
-		assert(success);
-#else
-		_spaceDiscretizer->Compute();
-#endif
-	}
-
-	template<typename Real>
-	void LinearOperatorProblem<Real>::Advance(const SolverType solverType) noexcept
+	void LinearOperatorProblem<Real>::Precompute(const SolverType solverType) noexcept
 	{
 		if (_lastSolverType == SolverType::Null || _lastSolverType != solverType)
 		{
@@ -243,12 +220,58 @@ namespace pde
 			_lastSolverType = solverType;
 			_cache.resize(_solution.size());
 		}
+	}
 
+	template<typename Real>
+	void LinearOperatorProblem<Real>::MakeSpaceOperator(const SolverType solverType) noexcept
+	{
+		if (!_spaceDiscretizer || _lastSolverType != solverType)
+		{
+			switch (solverType)
+			{
+				case SolverType::ExplicitEuler:
+				case SolverType::LaxWendroff:
+				case SolverType::ImplicitEuler:
+				case SolverType::CrankNicolson:
+					_spaceDiscretizer = std::make_unique<CenteredDifferenceSpaceDiscretizer<Real>>(_inputData, _nSpacePoints, solverType);
+					break;
+				case SolverType::ADI:
+					_spaceDiscretizer = std::make_unique<AdiSpaceDiscretizer<Real>>(_inputData, _nSpacePoints);
+					break;
+				default:
+					_spaceDiscretizer.reset();
+					assert(false);
+					break;
+			}
+		}
+#ifndef NDEBUG
+		const auto success = _spaceDiscretizer->Compute();
+		assert(success);
+#else
+		_spaceDiscretizer->Compute();
+#endif
+	}
+
+	template<typename Real>
+	void LinearOperatorProblem<Real>::Advance(const SolverType solverType) noexcept
+	{
+		Precompute(solverType);
 		_timeDiscretizer->Compute(_cache, _solution);
 		_solution.noalias() = _cache;
 
 		this->SetZeroFluxBoundaryConditions();
 	}
+
+	template<typename Real>
+	void LinearOperatorProblem<Real>::Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
+		Precompute(solverType);
+		_timeDiscretizer->Compute(_cache, _solution, sourceTerm);
+		_solution.noalias() = _cache;
+
+		this->SetZeroFluxBoundaryConditions();
+	}
+
 }	 // namespace pde
 
 template class pde::Problem<float>;

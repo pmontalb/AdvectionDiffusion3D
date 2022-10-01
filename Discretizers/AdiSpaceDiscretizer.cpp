@@ -51,53 +51,62 @@ namespace pde
 		assert(std::isfinite(Kz) && Kz >= Real(0.0));
 
 		// discretize each dimension separately
-		for (std::size_t i = 1; i < _nSpacePoints[0] - 1; ++i)
+		for (std::size_t i = 0; i < _nSpacePoints[0] - 0; ++i)
 		{
-			for (std::size_t j = 1; j < _nSpacePoints[1] - 1; ++j)
+			for (std::size_t j = 0; j < _nSpacePoints[1] - 0; ++j)
 			{
-				for (std::size_t k = 1; k < _nSpacePoints[2] - 1; ++k)
+				for (std::size_t k = 0; k < _nSpacePoints[2] - 0; ++k)
 				{
 					// x
 					auto& xDiscretizer = _spaceDiscretizations[0][j + k * _nSpacePoints[1]][i];
 
-					const auto indexPlusX = GetIndex(i + 1, j, k, _nSpacePoints);
-					const auto indexMinusX = GetIndex(i - 1, j, k, _nSpacePoints);
+					if (i > 0 && i < _nSpacePoints[0] - 1)
+					{
+						const auto indexPlusX = GetIndex(i + 1, j, k, _nSpacePoints);
+						const auto indexMinusX = GetIndex(i - 1, j, k, _nSpacePoints);
 
-					xDiscretizer.sub = -u[indexMinusX] / (two * dx);
-					xDiscretizer.sub += Kx / (dx * dx);
+						xDiscretizer.sub = -u[indexMinusX] / (two * dx);
+						xDiscretizer.sub += Kx / (dx * dx);
 
-					xDiscretizer.diag = -two * Kx / (dx * dx);
+						xDiscretizer.diag = -two * Kx / (dx * dx);
 
-					xDiscretizer.super = u[indexPlusX] / (two * dx);
-					xDiscretizer.super += Kx / (dx * dx);
+						xDiscretizer.super = u[indexPlusX] / (two * dx);
+						xDiscretizer.super += Kx / (dx * dx);
+					}
 
 					// y
 					auto& yDiscretizer = _spaceDiscretizations[1][i + k * _nSpacePoints[0]][j];
 
-					const auto indexPlusY = GetIndex(i, j + 1, k, _nSpacePoints);
-					const auto indexMinusY = GetIndex(i, j - 1, k, _nSpacePoints);
+					if (j > 0 && j < _nSpacePoints[1] - 1)
+					{
+						const auto indexPlusY = GetIndex(i, j + 1, k, _nSpacePoints);
+						const auto indexMinusY = GetIndex(i, j - 1, k, _nSpacePoints);
 
-					yDiscretizer.sub = -v[indexMinusY] / (two * dy);
-					yDiscretizer.sub += Ky / (dy * dy);
+						yDiscretizer.sub = -v[indexMinusY] / (two * dy);
+						yDiscretizer.sub += Ky / (dy * dy);
 
-					yDiscretizer.diag = -two * Ky / (dy * dy);
+						yDiscretizer.diag = -two * Ky / (dy * dy);
 
-					yDiscretizer.super = v[indexPlusY] / (two * dy);
-					yDiscretizer.super += Ky / (dy * dy);
+						yDiscretizer.super = v[indexPlusY] / (two * dy);
+						yDiscretizer.super += Ky / (dy * dy);
+					}
 
 					// z
 					auto& zDiscretizer = _spaceDiscretizations[2][j + i * _nSpacePoints[1]][k];
 
-					const auto indexPlusZ = GetIndex(i, j, k + 1, _nSpacePoints);
-					const auto indexMinusZ = GetIndex(i, j, k - 1, _nSpacePoints);
+					if (k > 0 && k < _nSpacePoints[2] - 1)
+					{
+						const auto indexPlusZ = GetIndex(i, j, k + 1, _nSpacePoints);
+						const auto indexMinusZ = GetIndex(i, j, k - 1, _nSpacePoints);
 
-					zDiscretizer.sub = -w[indexMinusZ] / (two * dz);
-					zDiscretizer.sub += Kz / (dz * dz);
+						zDiscretizer.sub = -w[indexMinusZ] / (two * dz);
+						zDiscretizer.sub += Kz / (dz * dz);
 
-					zDiscretizer.diag = -two * Kz / (dz * dz);
+						zDiscretizer.diag = -two * Kz / (dz * dz);
 
-					zDiscretizer.super = w[indexPlusZ] / (two * dz);
-					zDiscretizer.super += Kz / (dz * dz);
+						zDiscretizer.super = w[indexPlusZ] / (two * dz);
+						zDiscretizer.super += Kz / (dz * dz);
+					}
 				}
 			}
 		}

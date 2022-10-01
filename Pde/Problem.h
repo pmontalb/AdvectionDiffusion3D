@@ -36,6 +36,7 @@ namespace pde
 		const auto& GetSolution() const noexcept { return _solution; }
 
 		virtual void Advance(const SolverType solverType) noexcept;
+		virtual void Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept;
 
 	protected:
 		[[nodiscard]] size_t GetIndex(const size_t i, const size_t j, const size_t k) const noexcept { return pde::GetIndex(i, j, k, _nSpacePoints); }
@@ -56,10 +57,12 @@ namespace pde
 	public:
 		using Problem<Real>::Problem;
 		void Advance(const SolverType solverType) noexcept override;
+		void Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept override;
 
 		using Problem<Real>::GetIndex;
 
 	private:
+		void Precompute(const SolverType) noexcept;
 		void MakeSpaceOperator(const SolverType) noexcept;
 
 	private:

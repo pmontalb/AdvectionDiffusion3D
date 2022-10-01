@@ -12,7 +12,10 @@ static constexpr size_t totalSize = nSpacePoints[0] * nSpacePoints[1] * nSpacePo
 static constexpr std::array<size_t, 3> nSpacePointsDifferent = { 20, 11, 4 };
 static constexpr size_t totalSizeDifferent = nSpacePointsDifferent[0] * nSpacePointsDifferent[1] * nSpacePointsDifferent[2];
 
-[[nodiscard]] static constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k, const std::array<size_t, 3>& nSpacePoints_) noexcept { return pde::GetIndex(i, j, k, nSpacePoints_); }
+[[nodiscard]] static constexpr std::size_t GetIndex(const std::size_t i, const std::size_t j, const std::size_t k, const std::array<size_t, 3>& nSpacePoints_) noexcept
+{
+	return pde::GetIndex(i, j, k, nSpacePoints_);
+}
 
 template<typename Real>
 [[nodiscard]] static constexpr Real InitialCondition(const Real x, const Real y, const Real z) noexcept
@@ -96,7 +99,8 @@ static void SetUpInputDataDifferentGridSizes(pde::InputData<Real>& inputData)
 		for (std::size_t j = 0; j < nSpacePointsDifferent[1]; ++j)
 		{
 			inputData.initialCondition[GetIndex(0, j, k, nSpacePointsDifferent)] = inputData.initialCondition[GetIndex(1, j, k, nSpacePointsDifferent)];
-			inputData.initialCondition[GetIndex(nSpacePointsDifferent[0] - 1, j, k, nSpacePointsDifferent)] = inputData.initialCondition[GetIndex(nSpacePointsDifferent[0] - 2, j, k, nSpacePointsDifferent)];
+			inputData.initialCondition[GetIndex(nSpacePointsDifferent[0] - 1, j, k, nSpacePointsDifferent)] =
+				inputData.initialCondition[GetIndex(nSpacePointsDifferent[0] - 2, j, k, nSpacePointsDifferent)];
 		}
 	}
 	for (std::size_t k = 0; k < nSpacePointsDifferent[2]; ++k)
@@ -104,7 +108,8 @@ static void SetUpInputDataDifferentGridSizes(pde::InputData<Real>& inputData)
 		for (std::size_t i = 0; i < nSpacePointsDifferent[1]; ++i)
 		{
 			inputData.initialCondition[GetIndex(i, 0, k, nSpacePointsDifferent)] = inputData.initialCondition[GetIndex(i, 1, k, nSpacePointsDifferent)];
-			inputData.initialCondition[GetIndex(i, nSpacePointsDifferent[1] - 1, k, nSpacePointsDifferent)] = inputData.initialCondition[GetIndex(i, nSpacePointsDifferent[1] - 2, k, nSpacePointsDifferent)];
+			inputData.initialCondition[GetIndex(i, nSpacePointsDifferent[1] - 1, k, nSpacePointsDifferent)] =
+				inputData.initialCondition[GetIndex(i, nSpacePointsDifferent[1] - 2, k, nSpacePointsDifferent)];
 		}
 	}
 	for (std::size_t i = 0; i < nSpacePointsDifferent[0]; ++i)
@@ -112,21 +117,29 @@ static void SetUpInputDataDifferentGridSizes(pde::InputData<Real>& inputData)
 		for (std::size_t j = 0; j < nSpacePointsDifferent[1]; ++j)
 		{
 			inputData.initialCondition[GetIndex(i, j, 0, nSpacePointsDifferent)] = inputData.initialCondition[GetIndex(i, j, 1, nSpacePointsDifferent)];
-			inputData.initialCondition[GetIndex(i, j, nSpacePointsDifferent[2] - 1, nSpacePointsDifferent)] = inputData.initialCondition[GetIndex(i, j, nSpacePointsDifferent[2] - 2, nSpacePointsDifferent)];
+			inputData.initialCondition[GetIndex(i, j, nSpacePointsDifferent[2] - 1, nSpacePointsDifferent)] =
+				inputData.initialCondition[GetIndex(i, j, nSpacePointsDifferent[2] - 2, nSpacePointsDifferent)];
 		}
 	}
 }
 
 
-template<typename Real>
-void Print(const std::vector<Real>& solution, const std::string& label = "solution")
+template<typename VectorT>
+void Print(const VectorT& solution, const std::string& label = "solution")
 {
-	std::cerr << label << "= np.array([";
+	std::cout << label << ":" << std::endl;
 	for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
+	{
+		std::cout << "k=" << k << std::endl;
 		for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
+		{
 			for (std::size_t j = 0; j < nSpacePoints[1]; ++j)
-				std::cerr << solution[GetIndex(i, j, k, nSpacePoints)] << ", ";
-	std::cerr << "])" << std::endl;
+			{
+				std::cout << solution[static_cast<long>(GetIndex(i, j, k, nSpacePoints))] << ", ";
+			}
+			std::cout << std::endl;
+		}
+	}
 }
 
 template<typename VectorT>
@@ -138,6 +151,50 @@ void ToFile(std::ofstream& ofs, const VectorT& solution, const std::array<size_t
 			for (std::size_t j = 0; j < nSpacePoints_[1]; ++j)
 				ofs << solution[GetIndex(i, j, k, nSpacePoints_)] << ", ";
 	ofs << "])" << std::endl;
+}
+
+inline void SourceTerm()
+{
+	using Real = double;
+	pde::InputData<Real> inputData;
+	SetUpInputData(inputData);
+	inputData.deltaTime *= 8.0;
+	inputData.diffusionCoefficients.fill(2.0);
+	inputData.velocityField.fill(std::vector<Real>(totalSize, Real(0)));
+
+	const double radius = 0.8;
+	const double sourceStrength = 0.1;
+	Eigen::VectorXd sourceTerm;
+	sourceTerm.resize(static_cast<long>(inputData.initialCondition.size()));
+	sourceTerm.fill(0.0);
+	for (std::size_t k = 0; k < nSpacePoints[2]; ++k)
+		for (std::size_t i = 0; i < nSpacePoints[0]; ++i)
+			for (std::size_t j = 0; j < nSpacePoints[1]; ++j)
+			{
+				const auto x = inputData.spaceGrids[0][i] - inputData.spaceGrids[0][nSpacePoints[0] / 2];
+				const auto y = inputData.spaceGrids[1][j] - inputData.spaceGrids[1][nSpacePoints[1] / 2];
+//				const auto z = inputData.spaceGrids[2][k] - inputData.spaceGrids[2][nSpacePoints[2] / 2];
+				const auto z = 0;
+				if (x * x + y * y + z * z > radius * radius)
+					continue;
+				sourceTerm[static_cast<int>(GetIndex(i, j, k, nSpacePoints))] = sourceStrength;
+//				std::cout << i << " | " << j << " | " << k << ": " << sourceTerm[static_cast<int>(GetIndex(i, j, k, nSpacePoints))] << std::endl;
+			}
+//	std::cout << sourceTerm << std::endl;
+//	Print(sourceTerm, "source");
+
+	const std::string fileName = "/home/raiden/programming/AdvectionDiffusion3D/cmake-build-gcc-debug/sol.txt";
+	pde::LinearOperatorProblem<Real> problem(inputData);
+	for (size_t n = 0; n < 600; ++n)
+	{
+		problem.Advance(pde::SolverType::ADI, sourceTerm);
+		const auto& solution = problem.GetSolution();
+		std::vector<double> solutionCopy { solution.begin(), solution.end() };
+		if (n == 0)
+			npypp::Save(fileName, solutionCopy, { inputData.spaceGrids[0].size(), inputData.spaceGrids[1].size(), inputData.spaceGrids[2].size() }, "w");
+		else
+			npypp::Save(fileName, solutionCopy, { inputData.spaceGrids[0].size(), inputData.spaceGrids[1].size(), inputData.spaceGrids[2].size() }, "a");
+	}
 }
 
 inline void DifferentGridSizes()
@@ -225,7 +282,4 @@ inline void SingleRun()
 	}
 }
 
-int main(int /*argc*/, char** /*argv*/)
-{
-	DifferentGridSizes();
-}
+int main(int /*argc*/, char** /*argv*/) { SourceTerm(); }

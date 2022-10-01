@@ -19,6 +19,11 @@ namespace pde
 	{
 		out.noalias() = _operator * in;
 	}
+	template<typename Real>
+	void ExplicitTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
+		out.noalias() = _operator * in + sourceTerm * _inputData.deltaTime;
+	}
 
 }	 // namespace pde
 

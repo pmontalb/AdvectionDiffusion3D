@@ -36,6 +36,8 @@ namespace la
 
 			for (size_t i = 1; i < _matrix.Size(); ++i)
 			{
+				assert(std::abs(_matrix[i].diag - _matrix[i].sub * cache[static_cast<int>(i) - 1]) >  pde::Tolerance<Real>::value);
+				assert(std::abs(_matrix[i].diag) > std::abs(_matrix[i].sub) + std::abs(_matrix[i].super));
 				const auto m = one / (_matrix[i].diag - _matrix[i].sub * cache[static_cast<int>(i) - 1]);
 				cache[static_cast<int>(i)] = _matrix[i].super * m;
 				inOut[static_cast<int>(i)] = (inOut[static_cast<int>(i)] - _matrix[i].sub * inOut[static_cast<int>(i) - 1]) * m;

@@ -18,7 +18,9 @@ namespace pde
 	 * L is the centered difference space discretization operator (7-banded)
 	 * NB: for Lax-Wendroff scheme L contains some time components
 	 *
-	 * C_{n + 1} = (I - dt * L) * C_n
+	 * f is a time-invariant source term
+	 *
+	 * C_{n + 1} = (I + dt * L) * C_n + f * dt
 	 *
 	 * +++ Very fast
 	 * --- Conditionally stable
@@ -33,6 +35,7 @@ namespace pde
 
 		bool Precompute() noexcept override;
 		void Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) noexcept override;
+		void Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>& sourceTerm) noexcept override;
 
 	private:
 		const InputData<Real>& _inputData;

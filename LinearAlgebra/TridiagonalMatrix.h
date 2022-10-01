@@ -76,19 +76,12 @@ namespace la
 		void Dot(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) const noexcept
 		{
 			out[0] = _data[0].diag * in[0] + _data[0].super * in[1];
-			std::for_each(std::execution::unseq, std::next(out.begin()), std::prev(out.end()), [&](auto& outI)
-						  {
-							  const auto idx = &outI - out.data();
-							  outI = _data[static_cast<size_t>(idx)].sub * in[idx - 1];
-							  outI += _data[static_cast<size_t>(idx)].diag * in[idx];
-							  outI += _data[static_cast<size_t>(idx)].super * in[idx + 1];
-						  });
-//			for (size_t i = 1; i < _data.size() - 1; ++i)
-//			{
-//				out[static_cast<int>(i)] = _data[i].sub * in[static_cast<int>(i) - 1];
-//				out[static_cast<int>(i)] += _data[i].diag * in[static_cast<int>(i)];
-//				out[static_cast<int>(i)] += _data[i].super * in[static_cast<int>(i) + 1];
-//			}
+			for (size_t i = 1; i < _data.size() - 1; ++i)
+			{
+				out[static_cast<int>(i)] = _data[i].sub * in[static_cast<int>(i) - 1];
+				out[static_cast<int>(i)] += _data[i].diag * in[static_cast<int>(i)];
+				out[static_cast<int>(i)] += _data[i].super * in[static_cast<int>(i) + 1];
+			}
 			out[static_cast<int>(_data.size() - 1)] = _data[_data.size() - 1].sub * in[static_cast<int>(_data.size() - 2)] + _data[_data.size() - 1].diag * in[static_cast<int>(_data.size() - 1)];
 		}
 

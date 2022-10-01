@@ -28,6 +28,13 @@ namespace pde
 		out.noalias() = _solver.solve(_cacheProduct);
 		assert(_solver.info() == Eigen::Success);
 	}
+	template<typename Real>
+	void CrankNicolsonTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
+		_cacheProduct.noalias() = _rightOperator * in + sourceTerm * _inputData.deltaTime * Real(0.5);
+		out.noalias() = _solver.solve(_cacheProduct);
+		assert(_solver.info() == Eigen::Success);
+	}
 
 }	 // namespace pde
 

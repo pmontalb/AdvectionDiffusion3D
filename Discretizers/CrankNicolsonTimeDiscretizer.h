@@ -24,7 +24,9 @@ namespace pde
 	 *
 	 * L is the centered difference space discretization operator (7-banded)
 	 *
-	 * (I - 0.5 * dt * L) * C_{n + 1} = (I + 0.5 * dt * L) * C_n
+	 * f is a time-invariant source term
+	 *
+	 * (I - 0.5 * dt * L) * C_{n + 1} = (I + 0.5 * dt * L) * C_n + f * 0.5 * dt
 	 *
 	 * +++ Unconditionally stable
 	 * --- Unstable if the PDE is advection-dominated
@@ -39,6 +41,7 @@ namespace pde
 
 		bool Precompute() noexcept override;
 		void Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) noexcept override;
+		void Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>& sourceTerm) noexcept override;
 
 	private:
 		const InputData<Real>& _inputData;

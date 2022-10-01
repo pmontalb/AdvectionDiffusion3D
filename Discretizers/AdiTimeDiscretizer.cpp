@@ -77,14 +77,14 @@ namespace pde
 						half * _inputData.deltaTime * spaceOperatorX.super,
 					};
 					rightOperatorY = {
-						half * _inputData.deltaTime * spaceOperatorY.sub,
-						one + half * _inputData.deltaTime * spaceOperatorY.diag,
-						half * _inputData.deltaTime * spaceOperatorY.super,
+						-half * _inputData.deltaTime * spaceOperatorY.sub,
+						-half * _inputData.deltaTime * spaceOperatorY.diag,
+						-half * _inputData.deltaTime * spaceOperatorY.super,
 					};
 					rightOperatorZ = {
-						half * _inputData.deltaTime * spaceOperatorZ.sub,
-						one + half * _inputData.deltaTime * spaceOperatorZ.diag,
-						half * _inputData.deltaTime * spaceOperatorZ.super,
+						-half * _inputData.deltaTime * spaceOperatorZ.sub,
+						-half * _inputData.deltaTime * spaceOperatorZ.diag,
+						-half * _inputData.deltaTime * spaceOperatorZ.super,
 					};
 				}
 			}
@@ -95,6 +95,18 @@ namespace pde
 
 	template<typename Real>
 	void AdiTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in) noexcept
+	{
+		ComputeWorker(out, in, nullptr);
+	}
+
+	template<typename Real>
+	void AdiTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
+		ComputeWorker(out, in, &sourceTerm);
+	}
+
+	template<typename Real>
+	void AdiTimeDiscretizer<Real>::ComputeWorker(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>* sourceTerm) noexcept
 	{
 		const auto& nSpacePoints = _spaceDiscretizer.GetNumberOfSpacePoints();
 		const auto& spaceOperators = _spaceDiscretizer.GetSpaceDiscretizations();
@@ -134,6 +146,13 @@ namespace pde
 					}
 				}
 
+				// add source term
+				if (sourceTerm)
+				{
+					for (size_t i = 0; i < nSpacePoints[0]; ++i)
+						_dotProductCache[0][static_cast<int>(i)] += _inputData.deltaTime * (*sourceTerm)[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
+				}
+
 				// C_X = (I - 0.5 * dt * L_x) \ tmp
 				la::TridiagonalSolver<Real> solver(leftOperatorX);
 				solver.Solve(_dotProductCache[0], _solverCache[0]);
@@ -156,40 +175,12 @@ namespace pde
 				for (size_t j = 0; j < nSpacePoints[1]; ++j)
 					_inputCache[1][static_cast<int>(j)] = in[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
 
-				// tmp = 0.5 * dt * L_y * C_{n - 1}
+				// tmp = -0.5 * dt * L_y * C_{n - 1}
 				rightOperatorY.Dot(_dotProductCache[1], _inputCache[1]);
 
-				// add dt * (0.5 * L_x + L_y) * C_X
+				// tmp += C_X
 				for (size_t j = 0; j < nSpacePoints[1]; ++j)
-				{
-					const auto& Lx = spaceOperators[0][j + k * nSpacePoints[1]][i];
-					if (i > 0 && i < nSpacePoints[0] - 1)
-					{
-						_dotProductCache[1][static_cast<int>(j)] += Real(0.5) * _inputData.deltaTime * Lx.super * in[static_cast<int>(GetIndex(i + 1, j, k, nSpacePoints))];
-						_dotProductCache[1][static_cast<int>(j)] += Real(0.5) * _inputData.deltaTime * Lx.diag * in[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
-						_dotProductCache[1][static_cast<int>(j)] += Real(0.5) * _inputData.deltaTime * Lx.sub * in[static_cast<int>(GetIndex(i - 1, j, k, nSpacePoints))];
-					}
-
-					const auto& Lz = spaceOperators[2][j + i * nSpacePoints[1]][k];
-					if (k > 0 && k < nSpacePoints[2] - 1)
-					{
-						_dotProductCache[1][static_cast<int>(j)] += _inputData.deltaTime * Lz.super * in[static_cast<int>(GetIndex(i, j, k + 1, nSpacePoints))];
-						_dotProductCache[1][static_cast<int>(j)] += _inputData.deltaTime * Lz.diag * in[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
-						_dotProductCache[1][static_cast<int>(j)] += _inputData.deltaTime * Lz.sub * in[static_cast<int>(GetIndex(i, j, k - 1, nSpacePoints))];
-					}
-				}
-
-				// add 0.5 * dt * Lx * C_X
-				for (size_t j = 0; j < nSpacePoints[1]; ++j)
-				{
-					const auto& Lx = spaceOperators[0][j + k * nSpacePoints[1]][i];
-					if (i > 0 && i < nSpacePoints[0] - 1)
-					{
-						_dotProductCache[1][static_cast<int>(j)] += Real(0.5) * _inputData.deltaTime * Lx.super * _outCacheX[static_cast<int>(GetIndex(i + 1, j, k, nSpacePoints))];
-						_dotProductCache[1][static_cast<int>(j)] += Real(0.5) * _inputData.deltaTime * Lx.diag * _outCacheX[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
-						_dotProductCache[1][static_cast<int>(j)] += Real(0.5) * _inputData.deltaTime * Lx.sub * _outCacheX[static_cast<int>(GetIndex(i - 1, j, k, nSpacePoints))];
-					}
-				}
+					_dotProductCache[1][static_cast<int>(j)] += _outCacheX[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
 
 				// C_Y = (I - 0.5 * dt * L_y) \ tmp
 				la::TridiagonalSolver<Real> solver(leftOperatorY);
@@ -213,47 +204,12 @@ namespace pde
 				for (size_t k = 0; k < nSpacePoints[2]; ++k)
 					_inputCache[2][static_cast<int>(k)] = in[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
 
-				// tmp = 0.5 * dt * L_z * C_{n - 1}
+				// tmp = -0.5 * dt * L_z * C_{n - 1}
 				rightOperatorZ.Dot(_dotProductCache[2], _inputCache[2]);
+
+				// tmp += C_Y
 				for (size_t k = 0; k < nSpacePoints[2]; ++k)
-				{
-					const auto& Lx = spaceOperators[0][j + k * nSpacePoints[1]][i];
-					if (i > 0 && i < nSpacePoints[0] - 1)
-					{
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Lx.super * in[static_cast<int>(GetIndex(i + 1, j, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Lx.diag * in[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Lx.sub * in[static_cast<int>(GetIndex(i - 1, j, k, nSpacePoints))];
-					}
-
-					const auto& Ly = spaceOperators[1][i + k * nSpacePoints[0]][j];
-					if (j > 0 && j < nSpacePoints[1] - 1)
-					{
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Ly.super * in[static_cast<int>(GetIndex(i, j + 1, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Ly.diag * in[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Ly.sub * in[static_cast<int>(GetIndex(i, j - 1, k, nSpacePoints))];
-					}
-				}
-
-				// extract C_Y[k] = C_Y[j, i, :]
-				// add 0.5 * dt * Lx * (C_X + C_Y)
-				for (size_t k = 0; k < nSpacePoints[2]; ++k)
-				{
-					const auto& Lx = spaceOperators[0][j + k * nSpacePoints[1]][i];
-					if (i > 0 && i < nSpacePoints[0] - 1)
-					{
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Lx.super * _outCacheX[static_cast<int>(GetIndex(i + 1, j, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Lx.diag * _outCacheX[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Lx.sub * _outCacheX[static_cast<int>(GetIndex(i - 1, j, k, nSpacePoints))];
-					}
-
-					const auto& Ly = spaceOperators[1][i + k * nSpacePoints[0]][j];
-					if (j > 0 && j < nSpacePoints[1] - 1)
-					{
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Ly.super * _outCacheY[static_cast<int>(GetIndex(i, j + 1, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Ly.diag * _outCacheY[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
-						_dotProductCache[2][static_cast<int>(k)] += Real(0.5) * _inputData.deltaTime * Ly.sub * _outCacheY[static_cast<int>(GetIndex(i, j - 1, k, nSpacePoints))];
-					}
-				}
+					_dotProductCache[2][static_cast<int>(k)] += _outCacheY[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
 
 				// C_Y = (I - 0.5 * dt * L_y) \ tmp
 				la::TridiagonalSolver<Real> solver(leftOperatorZ);

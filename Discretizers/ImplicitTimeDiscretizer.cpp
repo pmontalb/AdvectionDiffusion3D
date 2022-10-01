@@ -21,6 +21,11 @@ namespace pde
 		out.noalias() = _solver.solve(in);
 		assert(_solver.info() == Eigen::Success);
 	}
+	template<typename Real>
+	void ImplicitTimeDiscretizer<Real>::Compute(Eigen::VectorX<Real>& out, const Eigen::VectorX<Real>& in, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
+		Compute(out, in + sourceTerm * _inputData.deltaTime);
+	}
 
 }	 // namespace pde
 

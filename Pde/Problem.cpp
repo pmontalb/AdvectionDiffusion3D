@@ -69,7 +69,7 @@ namespace pde
 				assert(std::abs(_inputData.spaceGrids[0][i + 1] - _inputData.spaceGrids[0][i] - dx) < Real(2) * Tolerance<Real>::value);
 				for (std::size_t j = 1; j < _nSpacePoints[1] - 1; ++j)
 				{
-					assert(std::abs(_inputData.spaceGrids[1][j + 1] - _inputData.spaceGrids[1][j] - dx) < Real(2) * Tolerance<Real>::value);
+					assert(std::abs(_inputData.spaceGrids[1][j + 1] - _inputData.spaceGrids[1][j] - dy) < Real(2) * Tolerance<Real>::value);
 
 					auto advectionX = (u[GetIndex(i + 1, j, k)] * _solution[GetIndex(i + 1, j, k)]);
 					advectionX -= (u[GetIndex(i - 1, j, k)] * _solution[GetIndex(i - 1, j, k)]);

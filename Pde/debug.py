@@ -17,7 +17,7 @@ def single_run():
     solution = actual
     x = np.linspace(-1, 1, Nx)
     y = np.linspace(-1, 1, solution.shape[1])
-    X, Y = np.meshgrid(x, y)
+    X, Y = np.meshgrid(y, x)
 
     def update_plot(frame_number, z, plot):
         plot[0].remove()
@@ -90,5 +90,6 @@ def stability_analysis():
     plt.show()
 
 
+
 if __name__ == "__main__":
-    stability_analysis()
+    single_run()

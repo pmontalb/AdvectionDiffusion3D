@@ -33,6 +33,20 @@ namespace pde
 	template<typename Real>
 	void Problem<Real>::Advance(const SolverType solverType) noexcept
 	{
+		AdvanceNoBoundaryConditions(solverType);
+		SetZeroFluxBoundaryConditions();
+	}
+
+	template<typename Real>
+	void Problem<Real>::Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
+		Advance(solverType);
+		_solution.noalias() += sourceTerm * _inputData.deltaTime;
+	}
+
+	template<typename Real>
+	void Problem<Real>::AdvanceNoBoundaryConditions(const SolverType solverType) noexcept
+	{
 		const auto dx = _inputData.spaceGrids[0][1] - _inputData.spaceGrids[0][0];
 		const auto dy = _inputData.spaceGrids[1][1] - _inputData.spaceGrids[1][0];
 		const auto dz = _inputData.spaceGrids[2][1] - _inputData.spaceGrids[2][0];
@@ -126,14 +140,11 @@ namespace pde
 				}
 			}
 		}
-
-		SetZeroFluxBoundaryConditions();
 	}
-
 	template<typename Real>
-	void Problem<Real>::Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	void Problem<Real>::AdvanceNoBoundaryConditions(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept
 	{
-		Advance(solverType);
+		AdvanceNoBoundaryConditions(solverType);
 		_solution.noalias() += sourceTerm * _inputData.deltaTime;
 	}
 
@@ -255,21 +266,30 @@ namespace pde
 	template<typename Real>
 	void LinearOperatorProblem<Real>::Advance(const SolverType solverType) noexcept
 	{
-		Precompute(solverType);
-		_timeDiscretizer->Compute(_cache, _solution);
-		_solution.noalias() = _cache;
-
+		AdvanceNoBoundaryConditions(solverType);
 		this->SetZeroFluxBoundaryConditions();
 	}
 
 	template<typename Real>
 	void LinearOperatorProblem<Real>::Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept
 	{
+		AdvanceNoBoundaryConditions(solverType, sourceTerm);
+		this->SetZeroFluxBoundaryConditions();
+	}
+
+	template<typename Real>
+	void LinearOperatorProblem<Real>::AdvanceNoBoundaryConditions(const SolverType solverType) noexcept
+	{
+		Precompute(solverType);
+		_timeDiscretizer->Compute(_cache, _solution);
+		_solution.noalias() = _cache;
+	}
+	template<typename Real>
+	void LinearOperatorProblem<Real>::AdvanceNoBoundaryConditions(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept
+	{
 		Precompute(solverType);
 		_timeDiscretizer->Compute(_cache, _solution, sourceTerm);
 		_solution.noalias() = _cache;
-
-		this->SetZeroFluxBoundaryConditions();
 	}
 
 }	 // namespace pde

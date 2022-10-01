@@ -34,9 +34,13 @@ namespace pde
 		virtual ~Problem() = default;
 
 		const auto& GetSolution() const noexcept { return _solution; }
+		auto& GetSolution() noexcept { return _solution; }
 
 		virtual void Advance(const SolverType solverType) noexcept;
 		virtual void Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept;
+
+		virtual void AdvanceNoBoundaryConditions(const SolverType solverType) noexcept;
+		virtual void AdvanceNoBoundaryConditions(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept;
 
 	protected:
 		[[nodiscard]] size_t GetIndex(const size_t i, const size_t j, const size_t k) const noexcept { return pde::GetIndex(i, j, k, _nSpacePoints); }
@@ -56,8 +60,14 @@ namespace pde
 	{
 	public:
 		using Problem<Real>::Problem;
+
+		using Problem<Real>::Advance;
 		void Advance(const SolverType solverType) noexcept override;
 		void Advance(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept override;
+
+		using Problem<Real>::AdvanceNoBoundaryConditions;
+		void AdvanceNoBoundaryConditions(const SolverType solverType) noexcept override;
+		void AdvanceNoBoundaryConditions(const SolverType solverType, const Eigen::VectorX<Real>& sourceTerm) noexcept override;
 
 		using Problem<Real>::GetIndex;
 

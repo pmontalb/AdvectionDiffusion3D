@@ -211,6 +211,16 @@ namespace pde
 				for (size_t k = 0; k < nSpacePoints[2]; ++k)
 					_dotProductCache[2][static_cast<int>(k)] += _outCacheY[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
 
+				if (sourceTerm)
+				{
+					for (size_t k = 0; k < nSpacePoints[2]; ++k)
+					{
+						const auto currentSource = (*sourceTerm)[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
+						const auto previousSource = (*sourceTerm)[static_cast<int>(GetIndex(i, j, k, nSpacePoints))];
+						_dotProductCache[2][static_cast<int>(k)] += _inputData.deltaTime * (currentSource - previousSource);
+					}
+				}
+
 				// C_Y = (I - 0.5 * dt * L_y) \ tmp
 				la::TridiagonalSolver<Real> solver(leftOperatorZ);
 				solver.Solve(_dotProductCache[2], _solverCache[2]);
@@ -220,6 +230,9 @@ namespace pde
 					out[static_cast<int>(GetIndex(i, j, k, nSpacePoints))] = _dotProductCache[2][static_cast<int>(k)];
 			}
 		}
+
+		if (sourceTerm)
+			_previousSourceTerm.noalias() = *sourceTerm;
 	}
 
 }	 // namespace pde

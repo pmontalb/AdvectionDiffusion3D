@@ -58,6 +58,8 @@ namespace pde
 		// store the intermediate result
 		Eigen::VectorX<Real> _outCacheX;
 		Eigen::VectorX<Real> _outCacheY;
+
+		Eigen::VectorX<Real> _previousSourceTerm;
 	};
 }	 // namespace pde
 
